@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<!-- Para "Agregar a pantalla de inicio" en iPhone -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dashboard Flexigrip">
+<meta name="theme-color" content="#003F6B">
+<link rel="apple-touch-icon" href="https://static.wixstatic.com/media/c78b4a_6df1a1ec619645b89210a1487fa416e1~mv2.png">
+<title>Dashboard de Calidad — Flexigrip</title>
+<!-- La fuente se carga con <link>: el @import que estaba a mitad del CSS era inválido y nunca cargaba -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root{
+    --bg:#F0F4F8; --card:#fff; --primary:#005B96; --primary-dark:#003F6B;
+    --accent:#E8F1FA; --text:#1A2B3C; --muted:#5A7185; --border:#C8D8E8;
+    --error:#C0392B; --success:#1D6A3A; --warn:#B7791F; --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--text);-webkit-text-size-adjust:100%;}
+
+  header{background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;padding:20px 28px;padding-top:max(20px, env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
+  .brand{display:flex;align-items:center;gap:14px;min-width:0;}
+  .brand-badge{background:#fff;color:var(--primary);font-weight:800;font-size:16px;padding:9px 16px;border-radius:8px;letter-spacing:.03em;}
+  .brand h1{margin:0;font-size:20px;font-weight:700;}
+  .brand p{margin:2px 0 0;font-size:12.5px;color:#CFE3F5;}
+  .status{display:flex;align-items:center;gap:10px;font-size:12.5px;color:#CFE3F5;flex-wrap:wrap;}
+  .status button,.status a{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;font-family:inherit;-webkit-tap-highlight-color:transparent;}
+  .status button:hover,.status a:hover{background:rgba(255,255,255,.25);}
+  #dot{width:8px;height:8px;border-radius:50%;background:#5FE0A0;display:inline-block;}
+
+  .wrap{max-width:1360px;margin:0 auto;padding:24px 28px 60px;}
+
+  .filters{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:22px;}
+  .filters .f{display:flex;flex-direction:column;gap:5px;}
+  .filters label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  .filters select,.filters input{padding:8px 11px;border:1.5px solid var(--border);border-radius:7px;font-size:13.5px;font-family:inherit;color:var(--text);background:#fff;min-width:150px;min-height:38px;}
+  .filters button{padding:9px 16px;border:none;border-radius:7px;background:var(--accent);color:var(--primary);font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;}
+  .filters button:hover{background:#D8E9F8;}
+  .filters .spacer{flex:1;}
+  .filters .n{font-size:12.5px;color:var(--muted);}
+
+  .section-title{font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--primary);text-transform:uppercase;margin:34px 0 14px;display:flex;align-items:center;gap:10px;}
+  .section-title .line{flex:1;height:1px;background:var(--border);}
+
+  /* ---- KPIs ---- */
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+  .kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;justify-content:center;min-width:0;}
+  .kpi-card .lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+  .kpi-card .val{font-size:30px;font-weight:800;color:var(--text);margin-top:6px;overflow-wrap:anywhere;}
+  .kpi-card .sub{font-size:12px;color:var(--muted);margin-top:4px;}
+  .kpi-card .val.good{color:var(--success);} .kpi-card .val.bad{color:var(--error);}
+
+  .insight{background:var(--accent);border:1px solid #C8DEF0;border-radius:10px;padding:14px 18px;font-size:13.5px;color:var(--text);margin-top:18px;line-height:1.55;}
+  .insight b{color:var(--primary-dark);}
+
+  /* ---- grid de gráficas ---- */
+  .grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;min-width:0;}
+  .card h3{margin:0 0 3px;font-size:14.5px;font-weight:700;color:var(--text);}
+  .card p.hint{margin:0 0 14px;font-size:12px;color:var(--muted);}
+  .chart-box{position:relative;height:340px;}
+
+  .tabla-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:2px solid var(--border);white-space:nowrap;}
+  td{padding:9px 10px;border-bottom:1px solid #EEF3F8;vertical-align:top;}
+  tr:hover td{background:var(--accent);}
+  .pill{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap;}
+  .pill.red{background:#FDEDEC;color:var(--error);}
+  .pill.yellow{background:#FEF6E7;color:var(--warn);}
+  .pill.green{background:#EAFAF1;color:var(--success);}
+
+  /* Tarjetas por OT (solo en celular, en lugar de la tabla ancha) */
+  .ot-cards{display:none;flex-direction:column;gap:10px;}
+  .ot-card{border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+  .ot-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .ot-card-ot{font-weight:800;color:var(--primary);font-size:14px;}
+  .ot-card-meta{font-size:12px;color:var(--muted);margin-top:2px;}
+  .ot-card-def{font-size:12.5px;line-height:1.6;margin-top:8px;}
+  .ot-card-nums{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:8px;flex-wrap:wrap;}
+  .ot-card-nums b{color:var(--text);}
+  .orden-movil{display:none;gap:8px;align-items:center;margin-bottom:12px;font-size:12px;color:var(--muted);}
+  .orden-movil select{padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;background:#fff;color:var(--text);}
+
+  #estado-carga{display:none;text-align:center;padding:60px 20px;color:var(--muted);}
+  #estado-vacio{display:none;text-align:center;padding:60px 20px;color:var(--muted);}
+  #contenido{display:none;}
+
+  @media (max-width:1000px){
+    .kpi-grid{grid-template-columns:1fr 1fr;}
+    .grid2{grid-template-columns:1fr;}
+  }
+  /* ── Celular ── */
+  @media (max-width:640px){
+    header{padding:16px;}
+    .brand h1{font-size:17px;}
+    .brand p{font-size:11.5px;}
+    .brand img{height:34px !important;}
+    .status{width:100%;}
+    .status button,.status a{padding:8px 11px;font-size:12.5px;}
+    .wrap{padding:16px 16px 48px;}
+    .filters{padding:14px;gap:12px;}
+    .filters .f{flex:1 1 calc(50% - 6px);min-width:0;}
+    .filters .f.full{flex-basis:100%;}
+    .filters select,.filters input{min-width:0;width:100%;}
+    .filters button{flex:1 1 100%;}
+    .filters .spacer{display:none;}
+    .kpi-grid{gap:10px;}
+    .kpi-card{padding:14px;}
+    .kpi-card .val{font-size:24px;}
+    .card{padding:16px 14px;}
+    .chart-box{height:300px;}
+    .section-title{margin:26px 0 12px;}
+    .tabla-scroll{display:none;}
+    .ot-cards{display:flex;}
+    .orden-movil{display:flex;}
+  }
+  /* iPhone: evita el zoom automático al tocar un campo (letra < 16px) */
+  @supports (-webkit-touch-callout: none){
+    .filters select,.filters input,.orden-movil select{font-size:16px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <img src="https://static.wixstatic.com/media/c78b4a_6df1a1ec619645b89210a1487fa416e1~mv2.png"
+         alt="Flexigrip"
+         style="height:40px;width:auto;background:#fff;border-radius:8px;padding:5px 9px;flex-shrink:0;"
+         onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='inline-flex';" />
+    <span id="logo-fallback" class="brand-badge" style="display:none;align-items:center;">FLEXIGRIP</span>
+    <div style="min-width:0;">
+      <h1>Dashboard de Calidad</h1>
+      <p>Análisis de defectos, rechazos y segregaciones — todos los clientes</p>
+    </div>
+  </div>
+  <div class="status">
+    <span><span id="dot"></span> <span id="estado-texto">Cargando...</span></span>
+    <button type="button" onclick="cargarTodo()">🔄 Actualizar</button>
+    <button type="button" onclick="diagnosticar()">🔧 Diagnosticar</button>
+    <a href="./">📝 App de reportes</a>
+  </div>
+</header>
+<div class="wrap" style="padding-bottom:0;">
+  <pre id="diagnostico" style="display:none;white-space:pre-wrap;word-break:break-word;background:#1A2B3C;color:#7CFC9E;font-size:11.5px;padding:14px;border-radius:8px;margin:18px 0 0;max-height:260px;overflow-y:auto;"></pre>
+</div>
+
+<div class="wrap">
+
+  <div class="filters">
+    <div class="f full">
+      <label for="f-cliente">Cliente</label>
+      <select id="f-cliente" onchange="aplicarFiltros()"><option value="">Todos los clientes</option></select>
+    </div>
+    <div class="f">
+      <label for="f-desde">Desde</label>
+      <input type="date" id="f-desde" onchange="aplicarFiltros()">
+    </div>
+    <div class="f">
+      <label for="f-hasta">Hasta</label>
+      <input type="date" id="f-hasta" onchange="aplicarFiltros()">
+    </div>
+    <div class="f full">
+      <label for="f-buscar">Buscar OT / Ítem</label>
+      <input type="text" id="f-buscar" placeholder="Ej. OT26050145" autocapitalize="characters" autocomplete="off" oninput="aplicarFiltros()">
+    </div>
+    <button type="button" onclick="limpiarFiltros()">Limpiar filtros</button>
+    <div class="spacer"></div>
+    <div class="n" id="n-reportes"></div>
+  </div>
+
+  <div id="estado-carga">⏳ Conectando con la base de datos...</div>
+  <div id="estado-vacio">No hay reportes que coincidan con estos filtros.</div>
+
+  <div id="contenido">
+
+    <!-- ============ KPIs GENERALES ============ -->
+    <div class="section-title">Resumen general <div class="line"></div></div>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="lbl">OT analizadas</div>
+        <div class="val" id="kpi-ot-n">—</div>
+        <div class="sub" id="kpi-reportes-n">— reportes</div>
+      </div>
+      <div class="kpi-card">
+        <div class="lbl">Total inspeccionado</div>
+        <div class="val" id="kpi-revisadas">—</div>
+        <div class="sub">bolsas revisadas</div>
+      </div>
+      <div class="kpi-card">
+        <div class="lbl">Total con defecto</div>
+        <div class="val" id="kpi-defectuoso">—</div>
+        <div class="sub">bolsas con algún defecto</div>
+      </div>
+      <div class="kpi-card">
+        <div class="lbl">% Defectuoso global</div>
+        <div class="val" id="kpi-pct-defecto">—</div>
+        <div class="sub">del total inspeccionado</div>
+      </div>
+    </div>
+    <div class="insight" id="insight-gerencial">Calculando resumen...</div>
+
+    <!-- ============ PARETO ============ -->
+    <div class="section-title">¿Qué defectos se detectan más? <div class="line"></div></div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Pareto de defectos (todas las OT)</h3>
+        <p class="hint">Barras = bolsas halladas · Línea = % acumulado. Los pocos defectos a la izquierda explican la mayoría del problema.</p>
+        <div class="chart-box"><canvas id="chart-pareto"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>% que representa cada defecto del total inspeccionado</h3>
+        <p class="hint">Mismo Pareto, pero normalizado: qué proporción de TODO lo que se revisó corresponde a cada tipo de defecto.</p>
+        <div class="chart-box"><canvas id="chart-pareto-pct"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ============ POR CLIENTE ============ -->
+    <div class="section-title">Por cliente <div class="line"></div></div>
+    <div class="grid2">
+      <div class="card">
+        <h3>% defectuoso por cliente</h3>
+        <p class="hint">Del total inspeccionado por cliente, qué % resultó con algún defecto.</p>
+        <div class="chart-box" id="box-clientes"><canvas id="chart-clientes"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Distribución Liberadas / Rechazadas</h3>
+        <p class="hint">Vista global del periodo filtrado.</p>
+        <div class="chart-box"><canvas id="chart-dona"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ============ TABLA PRINCIPAL: DEFECTOS POR OT ============ -->
+    <div class="section-title">Defectos por OT — qué se detectó y qué representa <div class="line"></div></div>
+    <div class="card">
+      <h3>Cada OT, con sus defectos y el % que representan sobre lo inspeccionado</h3>
+      <p class="hint">Ordenado de mayor a menor % defectuoso. Toca el encabezado de una columna para reordenar.</p>
+      <div class="orden-movil">
+        <label for="orden-movil-sel">Ordenar por:</label>
+        <select id="orden-movil-sel">
+          <option value="pct">% defectuoso</option>
+          <option value="defectuoso">Total defectuoso</option>
+          <option value="revisado">Inspeccionado</option>
+          <option value="ot">OT</option>
+          <option value="cliente">Cliente</option>
+        </select>
+      </div>
+      <div class="tabla-scroll">
+      <table id="tabla-principal">
+        <thead>
+          <tr>
+            <th data-key="ot" style="cursor:pointer;">OT ↕</th>
+            <th data-key="cliente" style="cursor:pointer;">Cliente ↕</th>
+            <th data-key="item" style="cursor:pointer;">Ítem ↕</th>
+            <th data-key="revisado" style="cursor:pointer;">Inspeccionado ↕</th>
+            <th>Defectos detectados</th>
+            <th data-key="defectuoso" style="cursor:pointer;">Total defectuoso ↕</th>
+            <th data-key="pct" style="cursor:pointer;">% de lo inspeccionado ↕</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-ot"></tbody>
+      </table>
+      </div>
+      <div class="ot-cards" id="ot-cards"></div>
+    </div>
+
+  </div>
+</div>
+<script>
+// ══════════════════════════════════════════════════════════════════════
+// CONFIGURACIÓN — misma base de datos que usa el formulario
+// ══════════════════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwuGDWR7XrwZe7b8j22ioYC7Arvs2KYdD9ZcUisEIFBJw1Vj23bk5mXCEmf4vsaah83bA/exec';
+
+let REPORTES = [];   // crudo, tal como llega de la Sheet
+let HALLAZGOS = [];  // crudo, tal como llega de la Sheet
+let charts = {};     // instancias de Chart.js activas, para poder destruirlas al refiltrar
+
+const ES_MOVIL = () => window.matchMedia('(max-width:640px)').matches;
+
+// ── Utilidades ──────────────────────────────────────────────────────────
+function num(v){ const n = Number(v); return isNaN(n) ? 0 : n; }
+function fmt(n){ return Math.round(n).toLocaleString('es-MX'); }
+function pct(n){ return n.toLocaleString('es-MX',{minimumFractionDigits:1,maximumFractionDigits:1}) + '%'; }
+function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// Convierte la fecha de la Sheet a un Date (día local, sin hora).
+// Acepta "17/7/2026 21:01:14" o ISO "2026-07-17T08:58:22.000Z" (celda con
+// formato de fecha). En el caso ISO se usa la hora LOCAL de México: antes se
+// tomaba la fecha UTC y los reportes de la noche caían en el día siguiente.
+function parseFecha(s){
+  if(!s) return null;
+  const txt = String(s);
+  if(/^\d{4}-\d{2}-\d{2}T/.test(txt)){
+    const d = new Date(txt);
+    if(!isNaN(d)) return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  const iso = txt.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso) return new Date(Number(iso[1]), Number(iso[2])-1, Number(iso[3]));
+  const m = txt.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(!m) return null;
+  return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]));
+}
+// "2026-07-17" del <input type=date> → Date local (new Date("2026-07-17") lo toma como UTC)
+function fechaInputLocal(v){
+  if(!v) return null;
+  const [a,m,d] = v.split('-').map(Number);
+  return new Date(a, m-1, d);
+}
+
+// ── Carga de datos ───────────────────────────────────────────────────────
+async function diagnosticar(){
+  const salida = document.getElementById('diagnostico');
+  salida.style.display = 'block';
+  const lineas = [];
+  const log = (t)=>{ lineas.push(t); salida.textContent = lineas.join('\n'); };
+
+  log('1) Consultando ' + APPS_SCRIPT_URL + '?accion=datos_dashboard ...');
+  try{
+    const res = await fetch(APPS_SCRIPT_URL + '?accion=datos_dashboard');
+    log('   Respuesta HTTP: ' + res.status + ' ' + res.statusText);
+    const texto = await res.text();
+    let data;
+    try{ data = JSON.parse(texto); }
+    catch{
+      log('\n❌ La respuesta no es JSON válido:');
+      log(texto.slice(0,500));
+      log('\n   Probablemente el /exec está corriendo una versión vieja del script.');
+      log('   Solución: Apps Script → Implementar → Gestionar implementaciones →');
+      log('   ✏️ → Nueva versión → Implementar.');
+      return;
+    }
+    if(!data.ok){
+      log('\n❌ El servidor respondió con ok:false. Error: ' + (data.error||'(sin detalle)'));
+      return;
+    }
+    if(!data.reportes){
+      log('\n⚠️ La respuesta no trae el campo "reportes" — falta redesplegar');
+      log('   la versión más reciente del Apps Script (ver arriba).');
+      return;
+    }
+    log('\n✅ El servidor respondió correctamente.');
+    log('   Reportes recibidos: ' + data.reportes.length);
+    log('   Hallazgos recibidos: ' + (data.hallazgos||[]).length);
+    if(data.reportes.length){
+      log('\n2) Primer reporte recibido (para revisar que los campos vengan bien):');
+      log(JSON.stringify(data.reportes[0], null, 2));
+    }
+    if(!data.reportes.length){
+      log('\n⚠️ El servidor respondió bien pero no hay NINGÚN reporte con ID asignado.');
+      log('   Si migraste datos viejos, confirma que corriste "asignarIdAReportesExistentes".');
+    }
+    log('\n3) Estado de Chart.js en esta página: ' + (typeof Chart !== 'undefined' ? '✅ cargado correctamente' : '❌ NO se cargó (revisa tu conexión a internet o un bloqueador de contenido que pueda estar filtrando cdnjs.cloudflare.com)'));
+
+    if(typeof Chart !== 'undefined'){
+      log('\n4) Probando dibujar una gráfica de prueba con tus datos reales...');
+      try{
+        const prueba = agruparPorDefecto(data.hallazgos || []).slice(0,3);
+        const contPrueba = document.createElement('canvas');
+        contPrueba.width = 300; contPrueba.height = 150;
+        const chartPrueba = new Chart(contPrueba, {
+          type:'bar',
+          data:{ labels: prueba.map(d=>d.nombre), datasets:[{type:'bar',label:'prueba',data:prueba.map(d=>d.hallada),yAxisID:'y'},{type:'line',label:'prueba2',data:prueba.map(()=>50),yAxisID:'y1'}] },
+          options:{ animation:false, scales:{ y:{beginAtZero:true}, y1:{beginAtZero:true,position:'right'} } }
+        });
+        chartPrueba.destroy();
+        log('✅ La gráfica de prueba se dibujó sin errores.');
+      }catch(errChart){
+        log('❌ Falló al dibujar la gráfica de prueba: ' + errChart.message);
+        log('   Este es el error real que está bloqueando las gráficas. Copia este mensaje completo.');
+      }
+    }
+  }catch(err){
+    log('\n❌ Falló la conexión: ' + err.message);
+  }
+}
+
+let cargando = false;
+async function cargarTodo(){
+  if(cargando) return;
+  cargando = true;
+  const primeraVez = !REPORTES.length;
+  if(primeraVez){
+    document.getElementById('contenido').style.display='none';
+    document.getElementById('estado-vacio').style.display='none';
+    document.getElementById('estado-carga').style.display='block';
+  }
+  document.getElementById('estado-texto').textContent = 'Cargando...';
+  try{
+    const res = await fetch(APPS_SCRIPT_URL + '?accion=datos_dashboard');
+    const data = await res.json();
+    if(!data.ok) throw new Error(data.error || 'Error del servidor');
+    REPORTES = data.reportes || [];
+    HALLAZGOS = data.hallazgos || [];
+    document.getElementById('estado-texto').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+    poblarFiltroClientes();
+    aplicarFiltros();
+  }catch(err){
+    document.getElementById('estado-texto').textContent = '❌ Sin conexión';
+    if(primeraVez){
+      document.getElementById('estado-carga').innerHTML = '❌ No se pudo conectar con la base de datos.<br><span style="font-size:12px;">(' + esc(err.message) + ')</span>';
+    }
+  }finally{
+    cargando = false;
+  }
+}
+
+function poblarFiltroClientes(){
+  const sel = document.getElementById('f-cliente');
+  const actual = sel.value;
+  const clientes = [...new Set(REPORTES.map(r=>r['Cliente']).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Todos los clientes</option>' + clientes.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  if(clientes.includes(actual)) sel.value = actual;
+}
+
+function limpiarFiltros(){
+  document.getElementById('f-cliente').value = '';
+  document.getElementById('f-desde').value = '';
+  document.getElementById('f-hasta').value = '';
+  document.getElementById('f-buscar').value = '';
+  aplicarFiltros();
+}
+
+// ── Filtros → subconjunto de datos → recalcular todo ─────────────────────
+function aplicarFiltros(){
+  const cliente = document.getElementById('f-cliente').value;
+  const desde = fechaInputLocal(document.getElementById('f-desde').value);
+  const hasta = fechaInputLocal(document.getElementById('f-hasta').value);
+  const q = document.getElementById('f-buscar').value.trim().toLowerCase();
+
+  function pasaFiltro(fechaStr, clienteVal, otVal, itemVal){
+    if(cliente && clienteVal !== cliente) return false;
+    if(q && !( String(otVal||'').toLowerCase().includes(q) || String(itemVal||'').toLowerCase().includes(q) )) return false;
+    if(desde || hasta){
+      const f = parseFecha(fechaStr);
+      if(!f) return false;
+      if(desde && f < desde) return false;
+      if(hasta && f > hasta) return false; // ambos son días completos: incluye el día "hasta"
+    }
+    return true;
+  }
+
+  const reportesF = REPORTES.filter(r => pasaFiltro(r['Marca temporal'], r['Cliente'], r['Número de OT'], r['Item']));
+  const idsValidos = new Set(reportesF.map(r=>r['ID']));
+  const hallazgosF = HALLAZGOS.filter(h => idsValidos.has(h['ID_Reporte']));
+
+  document.getElementById('n-reportes').textContent = reportesF.length + ' reporte(s) encontrados';
+  document.getElementById('estado-carga').style.display = 'none';
+
+  if(!reportesF.length){
+    document.getElementById('contenido').style.display='none';
+    document.getElementById('estado-vacio').style.display='block';
+    return;
+  }
+  document.getElementById('estado-vacio').style.display='none';
+  document.getElementById('contenido').style.display='block';
+
+  calcularYRenderizar(reportesF, hallazgosF);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// CÁLCULO DE MÉTRICAS Y RENDER
+// ══════════════════════════════════════════════════════════════════════
+function calcularYRenderizar(reportes, hallazgos){
+  // ---- Totales generales ----
+  const totalRevisadas = reportes.reduce((s,r)=>s+num(r['Cantidad total de bolsas recibidas']),0);
+  const totalLiberadas = reportes.reduce((s,r)=>s+num(r['Cantidad de bolsas liberadas']),0);
+  const totalRechazadas = reportes.reduce((s,r)=>s+num(r['Cantidad de bolsas rechazadas']),0);
+  const totalHallada = hallazgos.reduce((s,h)=>{
+    if(String(h['Defecto']||'').trim().toUpperCase()==='SIN DEFECTOS') return s;
+    return s+num(h['Cantidad hallada']);
+  },0);
+
+  const pctDefectoGlobal = totalRevisadas>0 ? (totalHallada/totalRevisadas*100) : 0;
+
+  // ---- Agrupar por OT (Cliente+OT como llave, por si dos clientes comparten folio) ----
+  const porOT = agruparPorOT(reportes, hallazgos);
+
+  // ---- KPIs ----
+  document.getElementById('kpi-ot-n').textContent = fmt(porOT.length);
+  document.getElementById('kpi-reportes-n').textContent = reportes.length + ' reporte(s)';
+  document.getElementById('kpi-revisadas').textContent = fmt(totalRevisadas);
+  document.getElementById('kpi-defectuoso').textContent = fmt(totalHallada);
+  document.getElementById('kpi-pct-defecto').textContent = pct(pctDefectoGlobal);
+  document.getElementById('kpi-pct-defecto').className = 'val ' + (pctDefectoGlobal<=3?'good':pctDefectoGlobal>=10?'bad':'');
+
+  // ---- Resumen ejecutivo ----
+  const paretoDefectos = agruparPorDefecto(hallazgos);
+  const topDefecto = paretoDefectos[0];
+  const peorOT = porOT.slice().sort((a,b)=>b.pct-a.pct)[0];
+  document.getElementById('insight-gerencial').innerHTML =
+    `<b>Resumen:</b> se analizaron <b>${porOT.length}</b> OT (${reportes.length} reporte(s)), con ${fmt(totalRevisadas)} bolsas inspeccionadas en total. ` +
+    `<b>${fmt(totalHallada)}</b> bolsas presentaron algún defecto (${pct(pctDefectoGlobal)} del total).` +
+    (topDefecto ? ` El defecto más frecuente es <b>"${esc(topDefecto.nombre)}"</b>, con ${fmt(topDefecto.hallada)} bolsas afectadas.` : '') +
+    (peorOT && peorOT.pct>0 ? ` La OT con mayor % defectuoso es <b>${esc(peorOT.ot)}</b> (${pct(peorOT.pct)} de lo inspeccionado en esa orden).` : '');
+
+  // ---- Tabla principal por OT ----
+  tablaOTData = porOT;
+  renderTablaPrincipal();
+
+  // ---- Gráficas ----
+  if(typeof Chart === 'undefined'){
+    document.querySelectorAll('.chart-box').forEach(b=>{
+      b.style.height='auto';
+      b.innerHTML = '<p class="hint" style="padding:20px 0;text-align:center;">No se pudo cargar la librería de gráficas. Revisa tu conexión y toca 🔄 Actualizar.</p>';
+    });
+    return;
+  }
+  intentarRenderizar('Pareto', ()=>renderPareto(paretoDefectos));
+  intentarRenderizar('Pareto %', ()=>renderParetoPct(paretoDefectos, totalRevisadas));
+  intentarRenderizar('Por cliente', ()=>renderClientes(agruparPorCliente(reportes, hallazgos)));
+  intentarRenderizar('Dona', ()=>renderDona(totalLiberadas, totalRechazadas));
+}
+
+// Agrupa reportes + hallazgos por OT (sumando si una OT aparece en más de
+// un reporte), con el desglose de cada defecto y qué % representa sobre
+// el total inspeccionado de esa OT.
+function agruparPorOT(reportes, hallazgos){
+  const mapa = {};
+  const idAKey = {};
+  reportes.forEach(r=>{
+    const key = (r['Cliente']||'') + '|' + (r['Número de OT']||'');
+    if(!mapa[key]) mapa[key] = { ot: r['Número de OT']||'(sin OT)', cliente: r['Cliente']||'(sin cliente)', item: r['Item']||'', revisado:0, liberadas:0, rechazadas:0, defectos:{} };
+    mapa[key].revisado += num(r['Cantidad total de bolsas recibidas']);
+    mapa[key].liberadas += num(r['Cantidad de bolsas liberadas']);
+    mapa[key].rechazadas += num(r['Cantidad de bolsas rechazadas']);
+    idAKey[r['ID']] = key;
+  });
+  hallazgos.forEach(h=>{
+    // Se busca por ID_Reporte (más confiable); si no, por Cliente+OT
+    const key = idAKey[h['ID_Reporte']] || ((h['Cliente']||'') + '|' + (h['Número de OT']||''));
+    if(!mapa[key]) return; // hallazgo de un reporte fuera del filtro actual
+    const nombre = String(h['Defecto']||'').trim();
+    if(!nombre || nombre.toUpperCase()==='SIN DEFECTOS') return;
+    if(!mapa[key].defectos[nombre]) mapa[key].defectos[nombre] = 0;
+    mapa[key].defectos[nombre] += num(h['Cantidad hallada']);
+  });
+  return Object.values(mapa).map(o=>{
+    const totalDefectuoso = Object.values(o.defectos).reduce((s,v)=>s+v,0);
+    return {
+      ot:o.ot, cliente:o.cliente, item:o.item, revisado:o.revisado, liberadas:o.liberadas, rechazadas:o.rechazadas,
+      defectuoso: totalDefectuoso,
+      pct: o.revisado>0 ? totalDefectuoso/o.revisado*100 : 0,
+      defectos: Object.entries(o.defectos).map(([nombre,cant])=>({nombre,cant,pct:o.revisado>0?cant/o.revisado*100:0})).sort((a,b)=>b.cant-a.cant)
+    };
+  });
+}
+
+function agruparPorDefecto(hallazgos){
+  const mapa = {};
+  hallazgos.forEach(h=>{
+    const nombre = String(h['Defecto']||'(sin nombre)').trim();
+    if(nombre.toUpperCase()==='SIN DEFECTOS') return;
+    if(!mapa[nombre]) mapa[nombre] = {nombre, hallada:0, segregada:0, reacondicionada:0};
+    mapa[nombre].hallada += num(h['Cantidad hallada']);
+    mapa[nombre].segregada += num(h['Cantidad segregada']);
+    mapa[nombre].reacondicionada += num(h['Cantidad reacondicionada']);
+  });
+  return Object.values(mapa).filter(d=>d.hallada>0).sort((a,b)=>b.hallada-a.hallada);
+}
+
+function agruparPorCliente(reportes, hallazgos){
+  const mapa = {};
+  reportes.forEach(r=>{
+    const nombre = r['Cliente']||'(sin cliente)';
+    if(!mapa[nombre]) mapa[nombre] = {nombre, revisadas:0, defectuoso:0};
+    mapa[nombre].revisadas += num(r['Cantidad total de bolsas recibidas']);
+  });
+  const idACliente = {};
+  reportes.forEach(r=>{ idACliente[r['ID']] = r['Cliente']||'(sin cliente)'; });
+  hallazgos.forEach(h=>{
+    const nombreCliente = idACliente[h['ID_Reporte']] || h['Cliente'];
+    if(!nombreCliente || !mapa[nombreCliente]) return;
+    if(String(h['Defecto']||'').trim().toUpperCase()==='SIN DEFECTOS') return;
+    mapa[nombreCliente].defectuoso += num(h['Cantidad hallada']);
+  });
+  return Object.values(mapa).map(c=>({...c, tasa: c.revisadas>0 ? c.defectuoso/c.revisadas*100 : 0}));
+}
+
+function destruir(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+
+// Corre el render de una gráfica sin dejar que un error ahí tumbe a las demás.
+function intentarRenderizar(nombre, fn){
+  try{ fn(); }
+  catch(err){ console.error('Error al graficar "' + nombre + '":', err); }
+}
+
+// En celular las etiquetas largas se recortan para que quepan
+function recortar(t, n){ t = String(t); return t.length>n ? t.slice(0,n-1)+'…' : t; }
+function ticksX(){
+  return ES_MOVIL()
+    ? { autoSkip:false, maxRotation:60, minRotation:60, font:{size:9.5}, callback:function(v){ return recortar(this.getLabelForValue(v), 14); } }
+    : { autoSkip:false, maxRotation:35, minRotation:35, font:{size:10.5} };
+}
+
+function renderPareto(datos){
+  destruir('pareto');
+  const top = datos.slice(0,8);
+  const total = datos.reduce((s,d)=>s+d.hallada,0);
+  let acum = 0;
+  const acumulado = top.map(d=>{ acum += d.hallada; return total>0 ? acum/total*100 : 0; });
+  charts.pareto = new Chart(document.getElementById('chart-pareto'), {
+    type:'bar',
+    data: {
+      labels: top.map(d=>d.nombre),
+      datasets: [
+        { type:'bar', label:'Bolsas halladas', data: top.map(d=>d.hallada), backgroundColor:'#005B96', borderRadius:5, yAxisID:'y' },
+        { type:'line', label:'% acumulado', data: acumulado, borderColor:'#eda100', backgroundColor:'#eda100', yAxisID:'y1', tension:0.25, pointRadius:4 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      scales:{
+        y:{ beginAtZero:true, title:{display:!ES_MOVIL(),text:'Bolsas'} },
+        y1:{ beginAtZero:true, max:100, position:'right', grid:{drawOnChartArea:false}, title:{display:!ES_MOVIL(),text:'% acumulado'}, ticks:{callback:v=>v+'%'} },
+        x:{ ticks: ticksX() }
+      },
+      plugins:{
+        legend:{ position:'bottom', labels:{boxWidth:12,font:{size:11}} },
+        tooltip:{ callbacks:{ label:ctx=> ctx.dataset.yAxisID==='y1' ? `% acumulado: ${pct(ctx.parsed.y)}` : `Bolsas halladas: ${fmt(ctx.parsed.y)}` } }
+      }
+    }
+  });
+}
+
+function renderClientes(porCliente){
+  destruir('clientes');
+  const ordenado = porCliente.slice().sort((a,b)=>b.tasa-a.tasa);
+  // Alto según el número de clientes, para que las barras no queden aplastadas
+  document.getElementById('box-clientes').style.height = Math.max(ES_MOVIL()?220:280, ordenado.length*46+70) + 'px';
+  charts.clientes = new Chart(document.getElementById('chart-clientes'), {
+    type:'bar',
+    data:{
+      labels: ordenado.map(c=>c.nombre),
+      datasets:[{ label:'% Defectuoso', data: ordenado.map(c=>Number(c.tasa.toFixed(2))), backgroundColor: ordenado.map(c=>c.tasa>=10?'#C0392B':c.tasa>=3?'#eda100':'#1D6A3A'), borderRadius:5 }]
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      scales:{
+        x:{ beginAtZero:true, title:{display:!ES_MOVIL(),text:'% Defectuoso'}, ticks:{callback:v=>v+'%'} },
+        y:{ ticks:{ font:{size:ES_MOVIL()?10.5:12}, callback:function(v){ return ES_MOVIL() ? recortar(this.getLabelForValue(v), 16) : this.getLabelForValue(v); } } }
+      },
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>`% defectuoso: ${pct(ctx.parsed.x)}` } } }
+    }
+  });
+}
+
+// ── Tabla principal: defectos por OT, ordenable por columna ──────────────
+let tablaOTData = [];
+let ordenActual = {key:'pct', dir:-1};
+
+function ordenarTabla(key){
+  if(ordenActual.key===key) ordenActual.dir *= -1;
+  else ordenActual = {key, dir: (key==='ot'||key==='cliente'||key==='item') ? 1 : -1};
+  document.getElementById('orden-movil-sel').value = ['pct','defectuoso','revisado','ot','cliente'].includes(key) ? key : 'pct';
+  renderTablaPrincipal();
+}
+document.querySelectorAll('#tabla-principal th[data-key]').forEach(th=>{
+  th.addEventListener('click', ()=> ordenarTabla(th.dataset.key));
+});
+document.getElementById('orden-movil-sel').addEventListener('change', function(){
+  ordenActual = {key:this.value, dir:(this.value==='ot'||this.value==='cliente') ? 1 : -1};
+  renderTablaPrincipal();
+});
+
+function renderTablaPrincipal(){
+  const {key, dir} = ordenActual;
+  const filas = tablaOTData.slice().sort((a,b)=>
+    typeof a[key]==='string' ? dir*String(a[key]).localeCompare(String(b[key])) : dir*(a[key]-b[key])
+  );
+
+  const tbody = document.getElementById('tabla-ot');
+  const tarjetas = document.getElementById('ot-cards');
+  if(!filas.length){
+    tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center;">Sin datos para estos filtros.</td></tr>';
+    tarjetas.innerHTML = '<p class="hint">Sin datos para estos filtros.</p>';
+    return;
+  }
+
+  const defectosHtml = f => f.defectos.length
+    ? f.defectos.map(d=>`${esc(d.nombre)} — ${fmt(d.cant)} (${pct(d.pct)})`).join('<br>')
+    : '<span style="color:var(--muted);">Sin defectos</span>';
+  const clase = f => f.pct>=10?'red':f.pct>=3?'yellow':'green';
+
+  tbody.innerHTML = filas.map(f=>`<tr>
+      <td><strong>${esc(f.ot)||'—'}</strong></td>
+      <td>${esc(f.cliente)||'—'}</td>
+      <td>${esc(f.item)||'—'}</td>
+      <td>${fmt(f.revisado)}</td>
+      <td style="font-size:12px;line-height:1.6;">${defectosHtml(f)}</td>
+      <td>${fmt(f.defectuoso)}</td>
+      <td><span class="pill ${clase(f)}">${pct(f.pct)}</span></td>
+    </tr>`).join('');
+
+  // Versión en tarjetas para celular (la tabla de 7 columnas no cabe en 390 px)
+  tarjetas.innerHTML = filas.map(f=>`
+    <div class="ot-card">
+      <div class="ot-card-top">
+        <div>
+          <div class="ot-card-ot">${esc(f.ot)||'—'}</div>
+          <div class="ot-card-meta">${esc(f.cliente)||'—'} · Ítem ${esc(f.item)||'—'}</div>
+        </div>
+        <span class="pill ${clase(f)}">${pct(f.pct)}</span>
+      </div>
+      <div class="ot-card-def">${defectosHtml(f)}</div>
+      <div class="ot-card-nums">
+        <span>Inspeccionado: <b>${fmt(f.revisado)}</b></span>
+        <span>Defectuoso: <b>${fmt(f.defectuoso)}</b></span>
+      </div>
+    </div>`).join('');
+}
+
+function renderParetoPct(datos, totalRevisadas){
+  destruir('paretoPct');
+  const top = datos.slice(0,8);
+  charts.paretoPct = new Chart(document.getElementById('chart-pareto-pct'), {
+    type:'bar',
+    data:{
+      labels: top.map(d=>d.nombre),
+      datasets:[{ label:'% del total inspeccionado', data: top.map(d=> totalRevisadas>0 ? Number((d.hallada/totalRevisadas*100).toFixed(2)) : 0), backgroundColor:'#4a3aa7', borderRadius:5 }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      scales:{ y:{ beginAtZero:true, title:{display:!ES_MOVIL(),text:'% del total inspeccionado'}, ticks:{callback:v=>v+'%'} }, x:{ ticks: ticksX() } },
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>`${pct(ctx.parsed.y)} del total inspeccionado` } } }
+    }
+  });
+}
+
+function renderDona(liberadas, rechazadas){
+  destruir('dona');
+  const total = liberadas + rechazadas;
+  charts.dona = new Chart(document.getElementById('chart-dona'), {
+    type:'doughnut',
+    data:{ labels:['Liberadas','Rechazadas'], datasets:[{ data:[liberadas, rechazadas], backgroundColor:['#1D6A3A','#C0392B'], borderWidth:0 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'58%',
+      plugins:{
+        legend:{ position:'bottom', labels:{boxWidth:12,font:{size:11}} },
+        tooltip:{ callbacks:{ label:ctx=>`${ctx.label}: ${fmt(ctx.parsed)} (${pct(total>0?ctx.parsed/total*100:0)})` } }
+      } }
+  });
+}
+
+// Al girar el celular o cambiar el tamaño de ventana, las etiquetas cambian
+// entre modo celular y modo computadora
+let _ultimoModoMovil = ES_MOVIL();
+window.addEventListener('resize', ()=>{
+  const ahora = ES_MOVIL();
+  if(ahora !== _ultimoModoMovil){ _ultimoModoMovil = ahora; if(REPORTES.length) aplicarFiltros(); }
+});
+
+// ── Inicio ──────────────────────────────────────────────────────────────
+cargarTodo();
+setInterval(()=>{ if(document.visibilityState==='visible') cargarTodo(); }, 5*60*1000); // auto-actualiza cada 5 min
+// iPhone: al volver a la app desde otra (o desbloquear), refresca los datos
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') cargarTodo(); });
+</script>
+</body>
+</html>
