@@ -213,6 +213,57 @@
       .lbl-largo{display:none;}
       .lbl-corto{display:inline;}
     }
+
+    /* ══ Botón Dashboard en el encabezado ══ */
+    .header-actions{display:flex;align-items:center;gap:8px;align-self:flex-start;flex-shrink:0;}
+    .header-actions .btn-candado{align-self:auto;}
+    .btn-header{height:40px;display:inline-flex;align-items:center;gap:6px;padding:0 12px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;transition:background .15s;-webkit-tap-highlight-color:transparent;}
+    .btn-header:hover{background:rgba(255,255,255,.28);}
+
+    /* ══ Menús desplegables con buscador ══ */
+    .combo{position:relative;}
+    .combo > select{position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none;}
+    .combo-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;border:1.5px solid var(--border);border-radius:7px;background:#fff;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);text-align:left;cursor:pointer;min-height:42px;-webkit-tap-highlight-color:transparent;}
+    .combo-btn:focus-visible,.combo.abierto .combo-btn{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,91,150,.12);}
+    .combo-btn.combo-error{border-color:var(--error);}
+    .combo-btn .combo-txt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .combo-btn .combo-txt.vacio{color:var(--muted);}
+    .combo-btn .combo-flecha{flex-shrink:0;width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translate(-2px,-2px);transition:transform .15s;}
+    .combo.abierto .combo-flecha{transform:rotate(-135deg) translate(-2px,-2px);}
+    .combo-panel{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:50;background:#fff;border:1.5px solid var(--border);border-radius:9px;box-shadow:0 10px 28px rgba(0,0,0,.14);overflow:hidden;display:none;flex-direction:column;}
+    .combo.abierto .combo-panel{display:flex;}
+    .combo-head{display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1.5px solid var(--accent);}
+    .combo-head .combo-titulo{display:none;}
+    .combo-buscar{flex:1;min-width:0;padding:9px 12px 9px 34px !important;background:#F7FAFD url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235A7185' stroke-width='2.5' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='16.5' y1='16.5' x2='21' y2='21'/%3E%3C/svg%3E") no-repeat 11px center !important;}
+    .combo-cerrar{display:none;}
+    .combo-lista{max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 0;margin:0;list-style:none;}
+    .combo-op{padding:10px 14px;font-size:14px;cursor:pointer;line-height:1.35;overflow-wrap:anywhere;}
+    .combo-op:hover,.combo-op.activa{background:var(--accent);}
+    .combo-op.sel{color:var(--primary);font-weight:700;}
+    .combo-op.sel::after{content:" ✓";}
+    .combo-op.placeholder{color:var(--muted);font-style:italic;}
+    .combo-op mark{background:#FFE9A8;color:inherit;border-radius:2px;padding:0 1px;}
+    .combo-vacio{padding:14px;font-size:13px;color:var(--muted);text-align:center;}
+    .combo-fondo{display:none;}
+    .ot-selector-combo{flex:1;min-width:160px;max-width:260px;}
+    .ot-selector-combo .combo-btn{padding:7px 10px;font-size:13px;min-height:36px;}
+
+    @media(max-width:520px){
+      .header-actions{order:2;margin-left:auto;align-self:center;}
+      .btn-header{height:38px;padding:0 11px;}
+      .ot-selector-combo{max-width:none;min-width:0;}
+      /* En celular el menú se abre como hoja desde abajo: la lista se ve completa
+         (igual que antes) y el buscador queda arriba, listo si se quiere escribir */
+      .combo-fondo{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10000;}
+      .combo:not(.abierto) .combo-fondo{display:none;}
+      .combo-panel{position:fixed;left:0;right:0;top:auto;bottom:0;z-index:10001;border-radius:16px 16px 0 0;border:none;max-height:78vh;padding-bottom:env(safe-area-inset-bottom);}
+      .combo-head{flex-wrap:wrap;padding:14px 14px 10px;}
+      .combo-head .combo-titulo{display:block;flex:1;font-size:15px;font-weight:700;color:var(--text);}
+      .combo-cerrar{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;border-radius:50%;background:var(--accent);color:var(--text);font-size:15px;cursor:pointer;}
+      .combo-buscar{flex-basis:100%;}
+      .combo-lista{max-height:none;flex:1;}
+      .combo-op{padding:14px 18px;font-size:15px;border-bottom:1px solid #F0F4F8;}
+    }
   </style>
 </head>
 <body>
@@ -227,7 +278,10 @@
       <h1>Soporte Técnico Flexigrip</h1>
       <p>Reportes de Soporte Técnico multi-cliente</p>
     </div>
-    <button id="btn-candado" class="btn-candado" onclick="abrirClave()" title="Acceso administrador" aria-label="Acceso administrador">🔒</button>
+    <div class="header-actions">
+      <a href="dashboard.html" target="_blank" rel="noopener" class="btn-header" title="Abrir el Dashboard en otra ventana">📊 <span>Dashboard</span></a>
+      <button id="btn-candado" class="btn-candado" onclick="abrirClave()" title="Acceso administrador" aria-label="Acceso administrador">🔒</button>
+    </div>
   </div>
 
   <!-- Modal clave -->
@@ -1387,7 +1441,7 @@ document.addEventListener('input', function(e){
   if(t.classList && t.classList.contains('num-only')) return; // se maneja aparte
   const esCampoTexto = (t.tagName==='INPUT' && t.type==='text') || t.tagName==='TEXTAREA';
   if(!esCampoTexto) return;
-  if(t.id==='ot' || t.id==='buscar-reporte') return;
+  if(t.id==='ot' || t.id==='buscar-reporte' || (t.dataset && t.dataset.sinMayus)) return;
   forzarMayusculas(t);
 });
 
@@ -1440,8 +1494,11 @@ function validarCantidadesEnteras(form){
 function markError(input,msg){
   const err=document.createElement('p');
   err.className='field-error hint'; err.style.color='var(--error)'; err.textContent=msg;
-  input.after(err); input.style.borderColor='var(--error)';
-  input.addEventListener('input',()=>{ input.style.borderColor=''; err.remove(); },{once:true});
+  // En los menús con buscador el mensaje va debajo del menú visible, no dentro
+  (input._combo ? input.closest('.combo') : input).after(err); input.style.borderColor='var(--error)';
+  const visible = input._combo ? input._combo.btn : null;
+  if(visible) visible.classList.add('combo-error');
+  input.addEventListener('input',()=>{ input.style.borderColor=''; if(visible) visible.classList.remove('combo-error'); err.remove(); },{once:true});
 }
 
 // ── Autoformateo del Número de OT: siempre "OT" + 8 dígitos ───────────────
@@ -2501,6 +2558,141 @@ function mostrarBotonesAdmin(){
 document.getElementById('modal-clave').addEventListener('click', function(e){
   if(e.target === this) cerrarModal();
 });
+
+// ══════════════════════════════════════════════════════════════════════
+// MENÚS DESPLEGABLES CON BUSCADOR
+// El <select> original se conserva (oculto) para que todo el código que ya
+// lee .value, cambia sus opciones o escucha 'change' siga igual. Encima se
+// pone un botón que abre la lista con un buscador: se puede elegir de la
+// lista como siempre, o escribir para filtrar (sin importar acentos).
+// ══════════════════════════════════════════════════════════════════════
+function sinAcentos(t){ return String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
+function escHtml(t){ return String(t==null?'':t).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const ES_CELULAR_COMBO = ()=> window.matchMedia('(max-width:520px)').matches;
+let comboAbierto = null;
+
+function crearBuscador(select, opciones){
+  opciones = opciones || {};
+  if(!select || select._combo) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'combo' + (opciones.clase ? ' '+opciones.clase : '');
+  select.parentNode.insertBefore(wrap, select);
+  wrap.appendChild(select);
+  if(select.style.marginBottom){ wrap.style.marginBottom = select.style.marginBottom; select.style.marginBottom=''; }
+  select.tabIndex = -1;
+  select.setAttribute('aria-hidden','true');
+
+  const titulo = opciones.titulo || (select.id && document.querySelector(`label[for="${select.id}"]`)
+    ? document.querySelector(`label[for="${select.id}"]`).childNodes[0].textContent.trim() : 'Selecciona');
+
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'combo-btn';
+  btn.setAttribute('aria-haspopup','listbox'); btn.setAttribute('aria-expanded','false');
+  btn.innerHTML = '<span class="combo-txt"></span><span class="combo-flecha" aria-hidden="true"></span>';
+  const fondo = document.createElement('div'); fondo.className = 'combo-fondo';
+  const panel = document.createElement('div'); panel.className = 'combo-panel';
+  panel.innerHTML = `<div class="combo-head"><span class="combo-titulo">${escHtml(titulo)}</span>`+
+    `<button type="button" class="combo-cerrar" aria-label="Cerrar">✕</button>`+
+    `<input type="text" class="combo-buscar" placeholder="Buscar..." autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" /></div>`+
+    `<ul class="combo-lista" role="listbox"></ul>`;
+  wrap.appendChild(btn); wrap.appendChild(fondo); wrap.appendChild(panel);
+  const buscar = panel.querySelector('.combo-buscar');
+  const lista = panel.querySelector('.combo-lista');
+  buscar.dataset.sinMayus = '1'; // el forzado a MAYÚSCULAS no aplica al buscador
+  let activa = -1, visibles = [];
+
+  function refrescarBoton(){
+    const op = select.options[select.selectedIndex];
+    const txt = btn.querySelector('.combo-txt');
+    txt.textContent = op ? op.textContent : '';
+    txt.classList.toggle('vacio', !op || op.value==='');
+  }
+  function pintar(){
+    const q = sinAcentos(buscar.value.trim());
+    visibles = Array.from(select.options).filter(o=>{
+      if(!q) return true;
+      if(o.value==='') return false; // el "-- Selecciona --" no estorba al buscar
+      return sinAcentos(o.textContent).includes(q);
+    });
+    if(!visibles.length){ lista.innerHTML = `<li class="combo-vacio">Sin coincidencias para "${escHtml(buscar.value)}"</li>`; activa=-1; return; }
+    lista.innerHTML = visibles.map((o,i)=>{
+      let t = escHtml(o.textContent);
+      if(q){ // resalta lo que coincide
+        const plano = sinAcentos(o.textContent), k = plano.indexOf(q);
+        if(k>=0){ const orig=o.textContent; t = escHtml(orig.slice(0,k))+'<mark>'+escHtml(orig.slice(k,k+q.length))+'</mark>'+escHtml(orig.slice(k+q.length)); }
+      }
+      const cls = ['combo-op', o.value===''?'placeholder':'', o.selected && o.value!==''?'sel':'', i===activa?'activa':''].join(' ');
+      return `<li class="${cls}" role="option" data-i="${i}">${t}</li>`;
+    }).join('');
+  }
+  function abrir(){
+    if(comboAbierto && comboAbierto!==api) comboAbierto.cerrar();
+    comboAbierto = api;
+    buscar.value = ''; activa = -1; pintar();
+    wrap.classList.add('abierto'); btn.setAttribute('aria-expanded','true');
+    if(ES_CELULAR_COMBO()) document.body.style.overflow='hidden';
+    const sel = lista.querySelector('.sel'); if(sel) sel.scrollIntoView({block:'nearest'});
+    // En computadora se puede escribir de inmediato. En celular NO se abre el
+    // teclado solo: la lista se ve completa y se toca el buscador si se quiere.
+    if(!ES_CELULAR_COMBO()) setTimeout(()=>buscar.focus(), 0);
+  }
+  function cerrar(){
+    wrap.classList.remove('abierto'); btn.setAttribute('aria-expanded','false');
+    document.body.style.overflow='';
+    if(comboAbierto===api) comboAbierto=null;
+  }
+  function elegir(o){
+    if(!o) return;
+    const cambio = select.value !== o.value;
+    select.value = o.value; refrescarBoton(); cerrar(); btn.focus({preventScroll:true});
+    if(cambio){
+      select.dispatchEvent(new Event('input',{bubbles:true}));
+      select.dispatchEvent(new Event('change',{bubbles:true}));
+    }
+  }
+  btn.addEventListener('click', ()=> wrap.classList.contains('abierto') ? cerrar() : abrir());
+  fondo.addEventListener('click', cerrar);
+  panel.querySelector('.combo-cerrar').addEventListener('click', cerrar);
+  buscar.addEventListener('input', ()=>{ activa = buscar.value.trim() ? 0 : -1; pintar(); });
+  lista.addEventListener('click', e=>{ const li=e.target.closest('.combo-op'); if(li) elegir(visibles[Number(li.dataset.i)]); });
+  buscar.addEventListener('keydown', e=>{
+    if(e.key==='ArrowDown'){ e.preventDefault(); activa=Math.min(visibles.length-1,activa+1); pintar(); const a=lista.querySelector('.activa'); if(a) a.scrollIntoView({block:'nearest'}); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); activa=Math.max(0,activa-1); pintar(); const a=lista.querySelector('.activa'); if(a) a.scrollIntoView({block:'nearest'}); }
+    else if(e.key==='Enter'){ e.preventDefault(); if(visibles.length) elegir(visibles[activa>=0?activa:0]); }
+    else if(e.key==='Escape'){ e.preventDefault(); cerrar(); btn.focus(); }
+  });
+  btn.addEventListener('keydown', e=>{ if(e.key==='ArrowDown' || (e.key.length===1 && /\S/.test(e.key))){ e.preventDefault(); abrir(); if(e.key.length===1){ buscar.value=e.key; buscar.dispatchEvent(new Event('input')); } } });
+
+  // Mantener el botón al día cuando el código cambia opciones o valor del <select>
+  new MutationObserver(()=>{ refrescarBoton(); if(wrap.classList.contains('abierto')) pintar(); })
+    .observe(select, {childList:true, subtree:true, attributes:true, characterData:true});
+  const desc = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+  Object.defineProperty(select, 'value', { configurable:true,
+    get(){ return desc.get.call(this); },
+    set(v){ desc.set.call(this, v); refrescarBoton(); } });
+  const descIdx = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'selectedIndex');
+  Object.defineProperty(select, 'selectedIndex', { configurable:true,
+    get(){ return descIdx.get.call(this); },
+    set(v){ descIdx.set.call(this, v); refrescarBoton(); } });
+  select.addEventListener('change', refrescarBoton);
+  select.focus = ()=> btn.focus(); // el código que hace .focus() al select enfoca el botón visible
+  if(select.form) select.form.addEventListener('reset', ()=> setTimeout(refrescarBoton, 0));
+
+  const api = { btn, cerrar, refrescar: refrescarBoton };
+  select._combo = api;
+  refrescarBoton();
+}
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && comboAbierto) comboAbierto.cerrar(); });
+document.addEventListener('click', e=>{
+  if(comboAbierto && !ES_CELULAR_COMBO() && !e.target.closest('.combo.abierto')) comboAbierto.cerrar();
+});
+
+crearBuscador(document.getElementById('cliente'), { titulo:'Cliente' });
+crearBuscador(document.getElementById('area_detalle'), { titulo:'Lugar de servicio' });
+crearBuscador(document.getElementById('defecto_nombre'), { titulo:'Defecto' });
+crearBuscador(document.getElementById('catalogo-cliente-lugares'), { titulo:'¿De qué cliente?' });
+crearBuscador(document.getElementById('ot-select'), { titulo:'Filtrar por OT', clase:'ot-selector-combo' });
 </script>
 </body>
 </html>
