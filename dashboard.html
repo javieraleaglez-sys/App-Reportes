@@ -32,7 +32,9 @@
   .status{display:flex;align-items:center;gap:10px;font-size:12.5px;color:#CFE3F5;flex-wrap:wrap;}
   .status button,.status a{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;font-family:inherit;-webkit-tap-highlight-color:transparent;}
   .status button:hover,.status a:hover{background:rgba(255,255,255,.25);}
-  #dot{width:8px;height:8px;border-radius:50%;background:#5FE0A0;display:inline-block;}
+  #dot{width:8px;height:8px;border-radius:50%;background:#5FE0A0;display:inline-block;flex-shrink:0;}
+  #dot.off{background:#FF8A80;} #dot.wait{background:#FFD166;}
+  .estado{display:inline-flex;align-items:center;gap:6px;}
 
   .wrap{max-width:1360px;margin:0 auto;padding:24px 28px 60px;}
 
@@ -50,8 +52,8 @@
 
   /* ---- KPIs ---- */
   .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
-  .kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;justify-content:center;min-width:0;}
-  .kpi-card .lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+  .kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;justify-content:flex-start;min-width:0;}
+  .kpi-card .lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);line-height:1.3;}
   .kpi-card .val{font-size:30px;font-weight:800;color:var(--text);margin-top:6px;overflow-wrap:anywhere;}
   .kpi-card .sub{font-size:12px;color:var(--muted);margin-top:4px;}
   .kpi-card .val.good{color:var(--success);} .kpi-card .val.bad{color:var(--error);}
@@ -82,7 +84,14 @@
   .ot-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
   .ot-card-ot{font-weight:800;color:var(--primary);font-size:14px;}
   .ot-card-meta{font-size:12px;color:var(--muted);margin-top:2px;}
-  .ot-card-def{font-size:12.5px;line-height:1.6;margin-top:8px;}
+  .ot-card-def{font-size:12.5px;line-height:1.45;margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+  .def-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-bottom:6px;border-bottom:1px dashed #E3ECF4;}
+  .def-row:last-child{border-bottom:none;padding-bottom:0;}
+  .def-row .def-nom{min-width:0;overflow-wrap:anywhere;}
+  .def-row .def-num{white-space:nowrap;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;}
+  .def-row .def-num small{font-weight:500;color:var(--muted);font-size:11.5px;}
+  .ot-card-top > div{min-width:0;}
+  .ot-card-meta{overflow-wrap:anywhere;}
   .ot-card-nums{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:8px;flex-wrap:wrap;}
   .ot-card-nums b{color:var(--text);}
   .orden-movil{display:none;gap:8px;align-items:center;margin-bottom:12px;font-size:12px;color:var(--muted);}
@@ -115,8 +124,16 @@
     .brand h1{font-size:17px;}
     .brand p{font-size:11.5px;}
     .brand img{height:34px !important;}
-    .status{width:100%;}
-    .status button,.status a{padding:8px 11px;font-size:12.5px;}
+    .status{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+    .status .estado{grid-column:1/-1;}
+    .status button,.status a{padding:9px 6px;font-size:12px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .brand{width:100%;}
+    .kpi-card .lbl{min-height:2.6em;}
+    .kpi-card .val{font-size:23px;}
+    .kpi-card .sub{font-size:11.5px;}
+    .section-title{font-size:11px;letter-spacing:.06em;line-height:1.35;}
+    .card h3{font-size:14px;line-height:1.3;}
+    .ot-card-nums{justify-content:space-between;}
     .wrap{padding:16px 16px 48px;}
     .filters{padding:14px;gap:12px;}
     .filters .f{flex:1 1 calc(50% - 6px);min-width:0;}
@@ -134,6 +151,9 @@
     .ot-cards{display:flex;}
     .orden-movil{display:flex;}
   }
+  .txt-corto{display:none;}
+  @media (max-width:640px){ .txt-largo{display:none;} .txt-corto{display:inline;} }
+  @media (max-width:360px){ .status button,.status a{font-size:11px;padding:9px 3px;} }
   /* iPhone: evita el zoom automático al tocar un campo (letra < 16px) */
   @supports (-webkit-touch-callout: none){
     .filters select,.filters input,.orden-movil select{font-size:16px;}
@@ -155,10 +175,10 @@
     </div>
   </div>
   <div class="status">
-    <span><span id="dot"></span> <span id="estado-texto">Cargando...</span></span>
+    <span class="estado"><span id="dot"></span> <span id="estado-texto">Cargando...</span></span>
     <button type="button" onclick="cargarTodo()">🔄 Actualizar</button>
     <button type="button" onclick="diagnosticar()">🔧 Diagnosticar</button>
-    <a href="./">📝 App de reportes</a>
+    <a href="./">📝 <span class="txt-largo">App de reportes</span><span class="txt-corto">Reportes</span></a>
   </div>
 </header>
 <div class="wrap" style="padding-bottom:0;">
@@ -508,6 +528,7 @@ async function cargarTodo(){
     document.getElementById('estado-vacio').style.display='none';
     document.getElementById('estado-carga').style.display='block';
   }
+  document.getElementById('dot').className = 'wait';
   document.getElementById('estado-texto').textContent = 'Cargando...';
   try{
     const res = await fetch(APPS_SCRIPT_URL + '?accion=datos_dashboard');
@@ -515,11 +536,13 @@ async function cargarTodo(){
     if(!data.ok) throw new Error(data.error || 'Error del servidor');
     REPORTES = data.reportes || [];
     HALLAZGOS = data.hallazgos || [];
+    document.getElementById('dot').className = '';
     document.getElementById('estado-texto').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
     poblarFiltroClientes();
     aplicarFiltros();
   }catch(err){
-    document.getElementById('estado-texto').textContent = '❌ Sin conexión';
+    document.getElementById('dot').className = 'off';
+    document.getElementById('estado-texto').textContent = 'Sin conexión';
     if(primeraVez){
       document.getElementById('estado-carga').innerHTML = '❌ No se pudo conectar con la base de datos.<br><span style="font-size:12px;">(' + esc(err.message) + ')</span>';
     }
@@ -711,10 +734,22 @@ function intentarRenderizar(nombre, fn){
 
 // En celular las etiquetas largas se recortan para que quepan
 function recortar(t, n){ t = String(t); return t.length>n ? t.slice(0,n-1)+'…' : t; }
-function ticksX(){
-  return ES_MOVIL()
-    ? { autoSkip:false, maxRotation:60, minRotation:60, font:{size:9.5}, callback:function(v){ return recortar(this.getLabelForValue(v), 14); } }
-    : { autoSkip:false, maxRotation:35, minRotation:35, font:{size:10.5} };
+// Parte un texto en renglones de ~n caracteres (para etiquetas horizontales)
+function enRenglones(t, n, maxR){
+  const pal = String(t).split(/\s+/); const out = []; let cur = '';
+  pal.forEach(w=>{ if((cur+' '+w).trim().length>n && cur){ out.push(cur); cur=w; } else cur=(cur+' '+w).trim(); });
+  if(cur) out.push(cur);
+  if(out.length>maxR){ const r = out.slice(0,maxR); r[maxR-1] = recortar(r[maxR-1]+'…', n); return r; }
+  return out;
+}
+function ticksX(nBarras){
+  if(!ES_MOVIL()) return { autoSkip:false, maxRotation:35, minRotation:35, font:{size:10.5} };
+  // Pocas barras: texto derecho en 2-3 renglones. Muchas: inclinado 45° y recortado.
+  const chica = window.innerWidth < 360;
+  if((nBarras||0) <= 4) return { autoSkip:false, maxRotation:0, minRotation:0, font:{size: chica ? 8.5 : 9.5},
+    callback:function(v){ return enRenglones(this.getLabelForValue(v), chica ? 7 : 9, 3); } };
+  return { autoSkip:false, maxRotation:45, minRotation:45, font:{size:9.5},
+    callback:function(v){ return recortar(this.getLabelForValue(v), 16); } };
 }
 
 function renderPareto(datos){
@@ -737,7 +772,7 @@ function renderPareto(datos){
       scales:{
         y:{ beginAtZero:true, title:{display:!ES_MOVIL(),text:'Bolsas'} },
         y1:{ beginAtZero:true, max:100, position:'right', grid:{drawOnChartArea:false}, title:{display:!ES_MOVIL(),text:'% acumulado'}, ticks:{callback:v=>v+'%'} },
-        x:{ ticks: ticksX() }
+        x:{ ticks: ticksX(top.length) }
       },
       plugins:{
         legend:{ position:'bottom', labels:{boxWidth:12,font:{size:11}} },
@@ -828,7 +863,9 @@ function renderTablaPrincipal(){
         </div>
         <span class="pill ${clase(f)}">${pct(f.pct)}</span>
       </div>
-      <div class="ot-card-def">${defectosHtml(f)}</div>
+      <div class="ot-card-def">${f.defectos.length
+        ? f.defectos.map(d=>`<div class="def-row"><span class="def-nom">${esc(d.nombre)}</span><span class="def-num">${fmt(d.cant)} <small>(${pct(d.pct)})</small></span></div>`).join('')
+        : '<span style="color:var(--muted);">Sin defectos</span>'}</div>
       <div class="ot-card-nums">
         <span>Inspeccionado: <b>${fmt(f.revisado)}</b></span>
         <span>Defectuoso: <b>${fmt(f.defectuoso)}</b></span>
@@ -848,7 +885,7 @@ function renderParetoPct(datos, totalRevisadas){
     },
     options:{
       responsive:true, maintainAspectRatio:false,
-      scales:{ y:{ beginAtZero:true, title:{display:!ES_MOVIL(),text:'% del total inspeccionado'}, ticks:{callback:v=>v+'%'} }, x:{ ticks: ticksX() } },
+      scales:{ y:{ beginAtZero:true, title:{display:!ES_MOVIL(),text:'% del total inspeccionado'}, ticks:{callback:v=>v+'%'} }, x:{ ticks: ticksX(top.length) } },
       plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>`${pct(ctx.parsed.y)} del total inspeccionado` } } }
     }
   });

@@ -143,21 +143,91 @@
     .wa-link-alt{display:block;text-align:center;font-size:12px;color:var(--primary);margin-top:8px;text-decoration:underline;}
     #wa-galeria{display:none;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:10px;}
     #wa-galeria img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1.5px solid var(--border);-webkit-touch-callout:default;}
+
+    /* ══ Maquetación: encabezado, rejillas y ajustes para celular ══ */
+    .app-header{display:flex;align-items:center;gap:16px;}
+    .app-logo{height:44px;width:auto;max-width:150px;object-fit:contain;background:#fff;border-radius:8px;padding:5px 9px;flex-shrink:0;}
+    .header-text{flex:1;min-width:0;}
+    .header-text h1{margin-bottom:2px;line-height:1.2;}
+    .header-text p{opacity:.85;line-height:1.35;}
+    .btn-candado{align-self:flex-start;flex-shrink:0;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;font-size:17px;line-height:1;cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent;}
+    .btn-candado:hover{background:rgba(255,255,255,.28);}
+    .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+    .mini-label{font-weight:500;font-size:11px;color:var(--muted);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .lbl-corto{display:none;}
+    .grid-2 > .field{min-width:0;}
+    .reporte-item-main{flex:1;min-width:0;}
+    .reporte-item-aside{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+    .reporte-item-desc{overflow-wrap:anywhere;}
+    .tag{max-width:100%;overflow-wrap:anywhere;line-height:1.35;}
+    .kpi-tile{display:flex;flex-direction:column;justify-content:space-between;align-items:center;gap:4px;}
+    .kpi-label{min-height:2.6em;display:flex;align-items:center;justify-content:center;line-height:1.3;margin-bottom:0;}
+    .chart-dona-wrap{max-width:320px;margin:0 auto;}
+    #counter{color:var(--muted);font-size:13px;font-weight:500;}
+
+    @media(max-width:520px){
+      body{padding:12px 12px 48px;padding-top:max(12px, env(safe-area-inset-top));}
+      /* Encabezado: logo + candado arriba; título a lo ancho abajo */
+      .app-header{flex-wrap:wrap;gap:12px 10px;padding:16px 18px 18px;}
+      .app-logo{height:38px;}
+      #logo-fallback{height:38px !important;font-size:16px !important;}
+      .btn-candado{order:2;margin-left:auto;align-self:center;width:38px;height:38px;}
+      .header-text{order:3;flex-basis:100%;}
+      .header-text h1{font-size:19px;}
+      .header-text p{font-size:12.5px;}
+      .card{padding:20px 18px;}
+      /* Campos apilados: el espacio lo pone .field, no la rejilla (evita huecos dobles) */
+      .grid-2{grid-template-columns:1fr;gap:0;}
+      .grid-2.keep-2{grid-template-columns:1fr 1fr;column-gap:10px;}
+      .section-title{margin:24px 0 14px;letter-spacing:.08em;}
+      /* Botones de acción: todos del mismo ancho, uno debajo de otro */
+      .submit-row{flex-direction:column;align-items:stretch;gap:10px;margin-top:24px;}
+      .submit-row .btn{width:100%;justify-content:center;padding:13px 16px;}
+      #counter{text-align:center;margin-top:2px;}
+      .cat-tabs .btn{padding:10px 6px;font-size:13px;}
+      /* Encabezados de secciones alineados con el contenido de abajo */
+      .consulta-header,.graficas-header{padding:14px 18px;}
+      .consulta-header .btn-danger,.btn-wa-graficas{width:100%;justify-content:center;}
+      .graficas-header > div{width:100%;}
+      .graficas-card{padding:20px 16px;}
+      .consulta-search{padding:12px 16px;}
+      .consulta-search input{min-width:0;}
+      .reporte-item{padding:14px 16px;}
+      .reporte-expand{padding:14px 16px;}
+      /* Fecha y flecha en su propia fila, arriba, para no apretar la descripción */
+      .reporte-item-header{flex-wrap:wrap;row-gap:4px;}
+      .reporte-item-aside{order:-1;flex-basis:100%;justify-content:space-between;}
+      .grafica-controles{flex-wrap:nowrap;}
+      .ot-selector{max-width:none;flex:1;min-width:0;}
+      .grafica-titulo{letter-spacing:.05em;line-height:1.35;}
+      .legend-row{gap:6px 14px;}
+      .kpi-row{grid-template-columns:1fr 1fr;gap:10px;}
+      .kpi-tile{padding:12px 10px;}
+      .kpi-label{font-size:10px;letter-spacing:.06em;}
+      .kpi-value{font-size:20px;}
+      .chart-dona-wrap{max-width:260px;}
+      #preview-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+    }
+    @media(max-width:360px){
+      .grid-2.keep-2{grid-template-columns:1fr;}
+      .lbl-largo{display:none;}
+      .lbl-corto{display:inline;}
+    }
   </style>
 </head>
 <body>
 <div class="wrapper">
-  <div class="header" style="position:relative;display:flex;align-items:center;gap:16px;">
+  <div class="header app-header">
     <img src="https://static.wixstatic.com/media/c78b4a_6df1a1ec619645b89210a1487fa416e1~mv2.png"
          alt="Flexigrip"
-         style="height:44px;width:auto;background:#fff;border-radius:8px;padding:5px 9px;flex-shrink:0;"
+         class="app-logo"
          onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='inline-flex';" />
     <span id="logo-fallback" style="display:none;height:44px;padding:0 14px;background:#fff;color:var(--primary);border-radius:8px;font-weight:800;font-size:18px;letter-spacing:.03em;align-items:center;flex-shrink:0;">FLEXIGRIP</span>
-    <div>
-      <h1 style="margin-bottom:2px;">Soporte Técnico Flexigrip</h1>
-      <p style="opacity:.85;">Reportes de Soporte Técnico multi-cliente</p>
+    <div class="header-text">
+      <h1>Soporte Técnico Flexigrip</h1>
+      <p>Reportes de Soporte Técnico multi-cliente</p>
     </div>
-    <button id="btn-candado" onclick="abrirClave()" title="Acceso administrador" style="position:absolute;top:18px;right:20px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.35);color:#fff;border-radius:8px;padding:7px 10px;font-size:17px;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.28)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">🔒</button>
+    <button id="btn-candado" class="btn-candado" onclick="abrirClave()" title="Acceso administrador" aria-label="Acceso administrador">🔒</button>
   </div>
 
   <!-- Modal clave -->
@@ -181,7 +251,7 @@
       <h3 style="font-size:16px;color:#1A2B3C;margin-bottom:4px;">🗂️ Gestionar catálogos</h3>
       <p style="font-size:12.5px;color:#5A7185;margin-bottom:16px;">Solo para administrador. Aquí puedes agregar o eliminar las opciones que aparecen en los desplegables para todos los técnicos.</p>
 
-      <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <div class="cat-tabs" style="display:flex;gap:8px;margin-bottom:16px;">
         <button type="button" id="tab-catalogo-clientes" class="btn" onclick="cambiarTabCatalogo('clientes')" style="flex:1;justify-content:center;background:var(--primary);color:#fff;">Clientes</button>
         <button type="button" id="tab-catalogo-defectos" class="btn" onclick="cambiarTabCatalogo('defectos')" style="flex:1;justify-content:center;background:var(--border);color:var(--text);">Defectos</button>
         <button type="button" id="tab-catalogo-lugares" class="btn" onclick="cambiarTabCatalogo('lugares')" style="flex:1;justify-content:center;background:var(--border);color:var(--text);">Lugares</button>
@@ -302,17 +372,17 @@
           <option value="">-- Selecciona un defecto --</option>
         </select>
         <p class="hint" style="margin-top:0;margin-bottom:8px;">¿El defecto no aparece? Pídele al administrador que lo agregue en "Gestionar catálogos".</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div class="grid-3">
           <div>
-            <label style="font-weight:400;font-size:11px;color:var(--muted);margin-bottom:3px;">Hallada</label>
+            <label class="mini-label">Hallada</label>
             <input type="text" id="defecto_hallada" class="num-only" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
           </div>
           <div>
-            <label style="font-weight:400;font-size:11px;color:var(--muted);margin-bottom:3px;">Segregada</label>
+            <label class="mini-label">Segregada</label>
             <input type="text" id="defecto_segregada" class="num-only" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
           </div>
           <div>
-            <label style="font-weight:400;font-size:11px;color:var(--muted);margin-bottom:3px;">Reacondicionada</label>
+            <label class="mini-label"><span class="lbl-largo">Reacondicionada</span><span class="lbl-corto">Reacond.</span></label>
             <input type="text" id="defecto_reacondicionada" class="num-only" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
           </div>
         </div>
@@ -325,7 +395,7 @@
       </div>
 
       <div class="section-title">Resultado Final</div>
-      <div class="grid-2">
+      <div class="grid-2 keep-2">
         <div class="field">
           <label for="liberadas">Bolsas liberadas <span class="req">*</span></label>
           <input type="text" id="liberadas" name="liberadas" class="num-only" inputmode="numeric" pattern="[0-9]*" placeholder="0" required />
@@ -443,7 +513,7 @@
     <div class="grafica-bloque" id="bloque-dona">
       <div class="grafica-titulo">Distribución de tipos de defecto</div>
       <div class="legend-row" id="legend-dona"></div>
-      <div class="chart-wrap" style="max-width:320px;margin:0 auto;"><canvas id="chart-dona" role="img" aria-label="Distribución de tipos de defecto">Tipos de defecto encontrados.</canvas></div>
+      <div class="chart-wrap chart-dona-wrap"><canvas id="chart-dona" role="img" aria-label="Distribución de tipos de defecto">Tipos de defecto encontrados.</canvas></div>
     </div>
 
   </div>
@@ -1926,12 +1996,12 @@ function renderReportesLista(){
     return `
     <div class="reporte-item" id="ritem-${idx}" onclick="toggleExpand(${idx})">
       <div class="reporte-item-header">
-        <div>
+        <div class="reporte-item-main">
           <div class="reporte-item-ot">${r['N° OT']} — Ítem ${r['Ítem']}</div>
           <div class="reporte-item-desc">${r['Descripción Producto']}</div>
           ${r['Cliente'] ? `<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;">🏷️ ${r['Cliente']}</div>` : ''}
         </div>
-        <div style="display:flex;align-items:center;gap:8px;">
+        <div class="reporte-item-aside">
           <div class="reporte-item-fecha">${r['Fecha']}</div>
           <span class="toggle-icon">▼</span>
         </div>
@@ -2037,6 +2107,14 @@ if(window.Chart && window.ChartDataLabels){
   Chart.defaults.set('plugins.datalabels', { display:false });
 }
 
+// ¿La barra es tan corta que su número no cabe adentro? (fracción del eje)
+function barraCorta(ctx, fraccion){
+  const v = Number(ctx.dataset.data[ctx.dataIndex])||0;
+  const max = ctx.chart.scales.x ? ctx.chart.scales.x.max : 0;
+  return max>0 && v/max < (fraccion||0.15);
+}
+const ES_PANTALLA_CHICA = ()=> window.matchMedia('(max-width:520px)').matches;
+
 function renderGraficas(){
   const todos = getReportes();
   const sec = document.getElementById('graficas-section');
@@ -2107,16 +2185,19 @@ function renderGraficas(){
         tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.x.toLocaleString('es-MX')}`}},
         datalabels:{
           display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,
-          color:'#fff',
-          anchor:'center',align:'center',
+          color:ctx=>barraCorta(ctx) ? '#1A2B3C' : '#fff',
+          anchor:ctx=>barraCorta(ctx) ? 'end' : 'center',
+          align:ctx=>barraCorta(ctx) ? 'end' : 'center',
+          offset:4, clamp:true,
           font:{size:11,weight:'700'},
           formatter:v=>v.toLocaleString('es-MX')
         }
       },
       scales:{
         x:{grid:{color:'rgba(0,0,0,.06)'},ticks:{color:'#5A7185',font:{size:11}},border:{display:false}},
-        y:{grid:{display:false},ticks:{color:'#1A2B3C',font:{size:12,weight:'600'}},border:{display:false}}
-      }
+        y:{grid:{display:false},ticks:{color:'#1A2B3C',font:{size:ES_PANTALLA_CHICA()?10.5:12,weight:'600'}},border:{display:false}}
+      },
+      layout:{padding:{right:ES_PANTALLA_CHICA()?28:36}}
     }
   });
 
@@ -2150,7 +2231,8 @@ function renderGraficas(){
           legend:{display:false},
           tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.x}%`}},
           datalabels:{
-            display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,
+            // En barras apiladas, un tramo angosto no tiene espacio para su número
+            display:ctx=>ctx.dataset.data[ctx.dataIndex]>0 && !barraCorta(ctx, 0.12),
             color:'#fff',
             anchor:'center',align:'center',
             font:{size:10,weight:'700'},
@@ -2159,7 +2241,7 @@ function renderGraficas(){
         },
         scales:{
           x:{stacked:true,beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'},ticks:{color:'#5A7185',font:{size:11},callback:v=>v+'%'},border:{display:false}},
-          y:{stacked:true,grid:{display:false},ticks:{color:'#1A2B3C',font:{size:12,weight:'600'}},border:{display:false}}
+          y:{stacked:true,grid:{display:false},ticks:{color:'#1A2B3C',font:{size:ES_PANTALLA_CHICA()?10.5:12,weight:'600'}},border:{display:false}}
         }
       }
     });
