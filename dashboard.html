@@ -124,7 +124,7 @@
     .brand h1{font-size:17px;}
     .brand p{font-size:11.5px;}
     .brand img{height:34px !important;}
-    .status{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+    .status{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
     .status .estado{grid-column:1/-1;}
     .status button,.status a{padding:9px 6px;font-size:12px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .brand{width:100%;}
@@ -158,6 +158,105 @@
   @supports (-webkit-touch-callout: none){
     .filters select,.filters input,.orden-movil select{font-size:16px;}
   }
+
+  /* ══ Ventana de Histórico ══ */
+  #hist{display:none;position:fixed;inset:0;z-index:9000;background:rgba(10,20,30,.55);align-items:center;justify-content:center;padding:20px;}
+  #hist.abierto{display:flex;}
+  .hist-box{background:var(--bg);width:100%;max-width:1320px;height:100%;max-height:94vh;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+  .hist-top{background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .hist-top h2{margin:0;font-size:17px;flex:1;min-width:0;}
+  .hist-top h2 small{display:block;font-size:12px;font-weight:500;color:#CFE3F5;margin-top:2px;}
+  .hist-acciones{display:flex;gap:8px;}
+  .hist-btn{border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
+  .hist-btn.excel{background:#1D6F42;color:#fff;} .hist-btn.excel:hover{background:#185C37;}
+  .hist-btn.excel:disabled{opacity:.6;cursor:wait;}
+  .hist-btn.cerrar{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);}
+  .hist-filtros{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+  .hist-filtros .f{display:flex;flex-direction:column;gap:4px;}
+  .hist-filtros label,.hist-filtros .lbl{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  .hist-filtros select,.hist-filtros input{padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13.5px;font-family:inherit;color:var(--text);background:#fff;min-width:140px;min-height:38px;}
+  .hist-filtros .f.buscar{flex:1;min-width:200px;} .hist-filtros .f.buscar input{width:100%;}
+  .seg{display:inline-flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:#fff;min-height:38px;}
+  .seg button{border:none;background:transparent;padding:0 14px;font-size:13px;font-weight:600;font-family:inherit;color:var(--muted);cursor:pointer;}
+  .seg button+button{border-left:1.5px solid var(--border);}
+  .seg button.on{background:var(--primary);color:#fff;}
+  .hist-tabs{display:flex;gap:4px;padding:0 20px;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;}
+  .hist-tabs button{border:none;background:none;padding:12px 14px;font-size:13.5px;font-weight:700;font-family:inherit;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;}
+  .hist-tabs button.on{color:var(--primary);border-bottom-color:var(--primary);}
+  .hist-cuerpo{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 28px;}
+  .hist-panel{display:none;} .hist-panel.on{display:block;}
+  .hk-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:14px;}
+  .hk{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;min-width:0;}
+  .hk .l{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;line-height:1.3;min-height:2.6em;}
+  .hk .v{font-size:23px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
+  .hk .s{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .hk .v.bad{color:var(--error);} .hk .v.good{color:var(--success);}
+  .hist-aviso{background:#FEF6E7;border:1px solid #F5D48A;color:#7A5410;border-radius:10px;padding:10px 14px;font-size:12.5px;line-height:1.5;margin-bottom:14px;}
+  .hist-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:14px;min-width:0;}
+  .hist-card h3{margin:0;font-size:14.5px;}
+  .hist-card p.hint{margin:3px 0 12px;font-size:12px;color:var(--muted);line-height:1.45;}
+  .hist-chart{position:relative;height:260px;}
+  .hist-leyenda{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:8px;}
+  .hist-leyenda i{display:inline-block;vertical-align:middle;margin-right:5px;}
+  .tabla-h{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .tabla-h th{position:sticky;top:0;background:#F5F9FC;z-index:1;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--border);white-space:nowrap;}
+  .tabla-h th[data-k]{cursor:pointer;} .tabla-h th.n,.tabla-h td.n{text-align:right;}
+  .tabla-h td{padding:8px 10px;border-bottom:1px solid #EEF3F8;vertical-align:top;}
+  .tabla-h td.n{font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .tabla-h tr:hover td{background:var(--accent);}
+  .tabla-h .fuera{color:var(--error);font-weight:800;}
+  .tabla-h .def{font-size:11.5px;line-height:1.5;min-width:200px;}
+  .tabla-h .txt{min-width:150px;max-width:280px;}
+  .tabla-scroll-h{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .hcards{display:none;flex-direction:column;gap:10px;}
+  .hc{border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:#fff;}
+  .hc .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .hc .t{font-weight:800;color:var(--primary);font-size:14px;}
+  .hc .meta{font-size:12px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere;}
+  .hc .fecha{font-size:11.5px;color:var(--muted);white-space:nowrap;}
+  .hc .desc{font-size:13px;margin-top:6px;overflow-wrap:anywhere;}
+  .hc .nums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:10px;}
+  .hc .nums div{background:var(--accent);border-radius:7px;padding:6px 4px;text-align:center;}
+  .hc .nums span{display:block;font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
+  .hc .nums b{font-size:14px;font-variant-numeric:tabular-nums;}
+  .hc .defs{font-size:12px;line-height:1.5;margin-top:8px;overflow-wrap:anywhere;}
+  .hc .extra{font-size:12px;color:var(--muted);margin-top:6px;overflow-wrap:anywhere;}
+  .hist-vacio{padding:50px 20px;text-align:center;color:var(--muted);font-size:14px;}
+  .grid-turno{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;}
+  .tstat{display:grid;grid-template-columns:1fr auto;gap:0;font-size:13px;}
+  .tstat div{padding:8px 2px;border-bottom:1px dashed #E3ECF4;}
+  .tstat div:nth-child(even){text-align:right;font-weight:700;font-variant-numeric:tabular-nums;}
+  .tstat .star{color:var(--primary);}
+  @media (max-width:1000px){ .hk-grid{grid-template-columns:repeat(3,minmax(0,1fr));} .grid-turno{grid-template-columns:1fr;} }
+  @media (max-width:640px){
+    #hist{padding:0;}
+    .hist-box{max-height:none;border-radius:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:block;}
+    .hist-top{position:sticky;top:0;z-index:5;}
+    .hist-tabs{position:sticky;top:var(--hist-top-h,112px);z-index:4;}
+    .hist-cuerpo{overflow:visible;}
+    .hist-top{padding:14px 16px;padding-top:max(14px, env(safe-area-inset-top));}
+    .hist-acciones{width:100%;}
+    .hist-acciones .hist-btn{flex:1;padding:11px 10px;}
+    .hist-filtros{padding:12px 16px;gap:10px;}
+    .hist-filtros .f{flex:1 1 calc(50% - 5px);min-width:0;}
+    .hist-filtros .f.full,.hist-filtros .f.buscar{flex-basis:100%;}
+    .hist-filtros select,.hist-filtros input{min-width:0;width:100%;}
+    .seg{width:100%;} .seg button{flex:1;padding:0 6px;}
+    .hist-tabs{padding:0 8px;}
+    .hist-tabs button{flex:1;padding:12px 8px;font-size:13px;}
+    .hist-cuerpo{padding:12px 12px 24px;}
+    .hk-grid{grid-template-columns:1fr 1fr;gap:10px;}
+    .hk{padding:10px 12px;} .hk .v{font-size:20px;}
+    .hist-card{padding:14px 12px;}
+    .hist-chart{height:230px;}
+    .tabla-h.movil-cards,.tabla-scroll-h.movil-cards{display:none;}
+    #tabla-tipo-turno th,#tabla-turnos th{white-space:normal;font-size:9.5px;padding:8px 6px;}
+    #tabla-tipo-turno td,#tabla-turnos td{padding:8px 6px;font-size:12px;}
+    #tabla-tipo-turno td span{display:block;}
+    #tabla-tipo-turno th:nth-child(3),#tabla-tipo-turno td:nth-child(3){display:none;}
+    .hcards{display:flex;}
+  }
+  @supports (-webkit-touch-callout: none){ .hist-filtros select,.hist-filtros input{font-size:16px;} }
 </style>
 </head>
 <body>
@@ -177,8 +276,7 @@
   <div class="status">
     <span class="estado"><span id="dot"></span> <span id="estado-texto">Cargando...</span></span>
     <button type="button" onclick="cargarTodo()">🔄 Actualizar</button>
-    <button type="button" onclick="diagnosticar()">🔧 Diagnosticar</button>
-    <a href="./" target="_blank" rel="noopener" title="Abrir la app de reportes en otra ventana">📝 <span class="txt-largo">App de reportes</span><span class="txt-corto">Reportes</span></a>
+    <button type="button" onclick="abrirHistorico()">📜 Histórico</button>
   </div>
 </header>
 <div class="wrap" style="padding-bottom:0;">
@@ -918,6 +1016,834 @@ cargarTodo();
 setInterval(()=>{ if(document.visibilityState==='visible') cargarTodo(); }, 5*60*1000); // auto-actualiza cada 5 min
 // iPhone: al volver a la app desde otra (o desbloquear), refresca los datos
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') cargarTodo(); });
+
+// ══════════════════════════════════════════════════════════════════════
+// HISTÓRICO DE INSPECCIÓN
+//  · Por periodo (día / semana / mes): volumen, % defectivo con carta p′ de
+//    Laney y detalle con el defecto principal.
+//  · Por turno: bolsas por turno T1/T2/T3, mediana y atípicos (Tukey).
+//  · Reportes: la lista completa con sus defectos.
+//  "Exportar a Excel" descarga exactamente lo que está filtrado.
+// ══════════════════════════════════════════════════════════════════════
+const H = { modo:'dia', tab:'periodo', orden:{k:'k', dir:-1}, charts:{}, filas:[], periodos:[], lp:null, turnos:[], tstats:null, tipos:[], avisos:[] };
+const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const dd2 = n=>String(n).padStart(2,'0');
+const claveDia = d=>`${d.getFullYear()}-${dd2(d.getMonth()+1)}-${dd2(d.getDate())}`;
+const pctF = v=> (v*100).toLocaleString('es-MX',{minimumFractionDigits:(v>0&&v<0.01)?2:1,maximumFractionDigits:(v>0&&v<0.01)?2:1})+'%';
+const normTxt = t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+
+// Fecha + hora del reporte (hora local de México)
+function fechaHora(v){
+  if(!v) return null;
+  const t = String(v);
+  if(/^\d{4}-\d{2}-\d{2}T/.test(t)){ const d = new Date(t); return isNaN(d) ? null : d; }
+  const m = t.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ ,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  if(m) return new Date(+m[3], +m[2]-1, +m[1], +(m[4]||0), +(m[5]||0), +(m[6]||0));
+  const iso = t.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return iso ? new Date(+iso[1], +iso[2]-1, +iso[3]) : null;
+}
+function fechaTexto(v){
+  const d = fechaHora(v);
+  return d ? `${dd2(d.getDate())}/${dd2(d.getMonth()+1)}/${d.getFullYear()} ${dd2(d.getHours())}:${dd2(d.getMinutes())}` : String(v||'');
+}
+// Turno: T1 07–15, T2 15–22, T3 22–07 (el T3 pertenece al día en que inició)
+function turnoDe(d){
+  const h = d.getHours();
+  const t = (h>=22 || h<7) ? 'T3' : (h<15 ? 'T1' : 'T2');
+  const base = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  if(h<7) base.setDate(base.getDate()-1);
+  return { turno:t, fechaTurno:base };
+}
+
+function construirFilasHistorico(){
+  const hallPorId = {};
+  HALLAZGOS.forEach(h=>{ (hallPorId[h['ID_Reporte']] = hallPorId[h['ID_Reporte']] || []).push(h); });
+  return REPORTES.map(r=>{
+    const hs = (hallPorId[r['ID']]||[]).filter(h=>String(h['Defecto']||'').trim());
+    const conDef = hs.filter(h=>String(h['Defecto']).trim().toUpperCase()!=='SIN DEFECTOS');
+    const revisadas = num(r['Cantidad total de bolsas recibidas']);
+    const sumaHall = conDef.reduce((s,h)=>s+num(h['Cantidad hallada']),0);
+    // Bolsas con defecto: la cifra del reporte; si no existe, la suma de sus hallazgos
+    const campoDef = r['Cantidad de bolsas con el defecto'];
+    const defectuoso = (campoDef!==undefined && campoDef!=='' && campoDef!==null) ? num(campoDef) : sumaHall;
+    const fh = fechaHora(r['Marca temporal']);
+    const tt = fh ? turnoDe(fh) : null;
+    return {
+      id: r['ID'], fh, fechaObj: fh ? new Date(fh.getFullYear(),fh.getMonth(),fh.getDate()) : null, fecha: fechaTexto(r['Marca temporal']),
+      turno: tt ? tt.turno : '', fechaTurno: tt ? tt.fechaTurno : null,
+      cliente: String(r['Cliente']||'').trim(), ot: r['Número de OT']||'', item: r['Item']||'',
+      producto: r['Descripción del Producto']||'', lugar: r['Área donde se realiza la inspección']||'',
+      revisadas, defectuoso, pct: revisadas>0 ? defectuoso/revisadas*100 : 0,
+      liberadas: num(r['Cantidad de bolsas liberadas']), rechazadas: num(r['Cantidad de bolsas rechazadas']),
+      personal: r['Personal presente']||'', observaciones: r['Observaciones']||'',
+      hallazgos: conDef.map(h=>({ nombre:String(h['Defecto']).trim().toUpperCase(), hallada:num(h['Cantidad hallada']), segregada:num(h['Cantidad segregada']), reacondicionada:num(h['Cantidad reacondicionada']) }))
+    };
+  });
+}
+
+// ── Agrupación por periodo ───────────────────────────────────────────────
+function inicioPeriodo(d, modo){
+  if(modo==='semana'){ const x = new Date(d); x.setDate(x.getDate() - ((x.getDay()+6)%7)); return x; } // lunes
+  if(modo==='mes') return new Date(d.getFullYear(), d.getMonth(), 1);
+  return d;
+}
+function etiquetaPeriodo(k, modo, larga){
+  const [y,m,d] = k.split('-').map(Number);
+  if(modo==='mes') return `${MESES[m-1]} ${y}`;
+  if(modo==='semana'){
+    if(!larga) return `Sem. ${d} ${MESES[m-1]}`;
+    const fin = new Date(y,m-1,d+6);
+    return `${dd2(d)}/${dd2(m)} – ${dd2(fin.getDate())}/${dd2(fin.getMonth()+1)}/${fin.getFullYear()}`;
+  }
+  return larga ? `${dd2(d)}/${dd2(m)}/${y}` : `${d} ${MESES[m-1]}`;
+}
+function agruparPeriodos(filas, modo){
+  const g = {};
+  filas.forEach(f=>{
+    if(!f.fechaObj || f.revisadas<=0) return;
+    const k = claveDia(inicioPeriodo(f.fechaObj, modo));
+    const o = g[k] = g[k] || { k, rep:0, ots:new Set(), insp:0, def:0, rech:0, lib:0, defs:{} };
+    o.rep++; o.ots.add(f.cliente+'|'+f.ot); o.insp += f.revisadas; o.def += f.defectuoso; o.rech += f.rechazadas; o.lib += f.liberadas;
+    f.hallazgos.forEach(h=>{ o.defs[h.nombre] = (o.defs[h.nombre]||0) + h.hallada; });
+  });
+  const arr = Object.values(g).sort((a,b)=> a.k<b.k ? -1 : 1);
+  arr.forEach(o=>{
+    o.nOt = o.ots.size; o.p = o.insp ? o.def/o.insp : 0; o.pr = o.insp ? o.rech/o.insp : 0;
+    const top = Object.entries(o.defs).sort((a,b)=>b[1]-a[1])[0]; o.top = top ? top[0] : '—';
+  });
+  return arr;
+}
+/* Carta p′ de Laney (2002): límites = p̄ ± 3·σi·σz, con σi = √(p̄(1−p̄)/ni) y
+   σz = MR̄(z)/1.128. Con lotes de miles de bolsas la carta p clásica da límites
+   casi pegados a la media (todo saldría "fuera de control"); σz corrige esa
+   sobredispersión. */
+function cartaLaney(arr){
+  const N = arr.reduce((s,o)=>s+o.insp,0), D = arr.reduce((s,o)=>s+o.def,0), pb = N ? D/N : 0;
+  arr.forEach(o=>{ o.si = Math.sqrt(pb*(1-pb)/o.insp); o.z = o.si>0 ? (o.p-pb)/o.si : 0; });
+  let mr = 0; arr.forEach((o,i)=>{ o.mr = i ? Math.abs(o.z - arr[i-1].z) : null; if(i) mr += o.mr; });
+  const sz = arr.length>1 ? (mr/(arr.length-1))/1.128 : 1;
+  arr.forEach(o=>{ o.pb = pb; o.ucl = Math.min(1, pb + 3*o.si*sz); o.lcl = Math.max(0, pb - 3*o.si*sz); o.fuera = o.p>o.ucl || o.p<o.lcl; });
+  return { pb, sz };
+}
+// Cuartil inclusivo (igual que QUARTILE / PERCENTILE de Excel)
+function percentil(ord, q){
+  if(!ord.length) return 0;
+  const pos = (ord.length-1)*q, b = Math.floor(pos), r = pos-b;
+  return ord[b+1]!==undefined ? ord[b] + r*(ord[b+1]-ord[b]) : ord[b];
+}
+function agruparTurnos(filas){
+  const g = {};
+  filas.forEach(f=>{
+    if(!f.fechaTurno || f.revisadas<=0) return;
+    const k = claveDia(f.fechaTurno)+'|'+f.turno;
+    const o = g[k] = g[k] || { k, fecha:claveDia(f.fechaTurno), turno:f.turno, rep:0, insp:0 };
+    o.rep++; o.insp += f.revisadas;
+  });
+  const arr = Object.values(g).sort((a,b)=> a.k<b.k ? -1 : 1);
+  const ord = arr.map(o=>o.insp).sort((a,b)=>a-b);
+  const q1 = percentil(ord,.25), med = percentil(ord,.5), q3 = percentil(ord,.75), p90 = percentil(ord,.9);
+  const lim = q3 + 1.5*(q3-q1);
+  arr.forEach(o=>{ o.atipico = o.insp > lim; });
+  const stats = { n:arr.length, med, q1, q3, p90, lim, prom: ord.length ? ord.reduce((a,b)=>a+b,0)/ord.length : 0, atipicos: arr.filter(o=>o.atipico).length };
+  const normales = arr.filter(o=>!o.atipico).map(o=>o.insp);
+  stats.promSin = normales.length ? normales.reduce((a,b)=>a+b,0)/normales.length : 0;
+  const total = arr.reduce((s,o)=>s+o.insp,0);
+  const tipos = ['T1','T2','T3'].map(t=>{
+    const xs = arr.filter(o=>o.turno===t); const o2 = xs.map(o=>o.insp).sort((a,b)=>a-b);
+    const b = xs.reduce((s,o)=>s+o.insp,0);
+    return { turno:t, n:xs.length, rep:xs.reduce((s,o)=>s+o.rep,0), insp:b, pct: total ? b/total : 0, med: percentil(o2,.5) };
+  });
+  return { arr, stats, tipos };
+}
+
+// ── Abrir / cerrar ───────────────────────────────────────────────────────
+function abrirHistorico(){
+  if(!REPORTES.length){ alert('Todavía no hay datos cargados. Toca 🔄 Actualizar e intenta de nuevo.'); return; }
+  const sel = document.getElementById('h-cliente');
+  const clientes = [...new Set(REPORTES.map(r=>String(r['Cliente']||'').trim()).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Todos los clientes</option>' + clientes.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  sel.value = document.getElementById('f-cliente').value;   // arranca con los filtros del Dashboard
+  document.getElementById('h-desde').value = document.getElementById('f-desde').value;
+  document.getElementById('h-hasta').value = document.getElementById('f-hasta').value;
+  document.getElementById('h-buscar').value = document.getElementById('f-buscar').value;
+  document.getElementById('hist').classList.add('abierto');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('hist').style.setProperty('--hist-top-h', document.querySelector('.hist-top').offsetHeight+'px');
+  document.querySelector('.hist-box').scrollTop = 0;
+  renderHistorico();
+}
+function cerrarHistorico(){
+  document.getElementById('hist').classList.remove('abierto');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && document.getElementById('hist').classList.contains('abierto')) cerrarHistorico(); });
+// La ventana está al final de la página (después de este script), por eso los
+// clics se atienden por delegación en lugar de enlazarlos al cargar.
+document.addEventListener('click', e=>{
+  const bm = e.target.closest('#h-modo button');
+  if(bm){ H.modo = bm.dataset.m; document.querySelectorAll('#h-modo button').forEach(x=>x.classList.toggle('on', x===bm)); renderHistorico(); return; }
+  const bt = e.target.closest('.hist-tabs button');
+  if(bt){
+    H.tab = bt.dataset.t;
+    document.querySelectorAll('.hist-tabs button').forEach(x=>x.classList.toggle('on', x===bt));
+    document.querySelectorAll('.hist-panel').forEach(p=>p.classList.toggle('on', p.id==='hp-'+H.tab));
+    const cuerpo = document.querySelector('.hist-cuerpo'); cuerpo.scrollTop = 0;
+    const caja = document.querySelector('.hist-box'); if(caja.scrollTop > caja.querySelector('.hist-tabs').offsetTop) caja.scrollTop = caja.querySelector('.hist-tabs').offsetTop;
+    pintarGraficasHistorico(); // las gráficas se dibujan cuando su pestaña está visible
+    return;
+  }
+  const th = e.target.closest('#tabla-periodo th[data-k]');
+  if(th){ const k = th.dataset.k; H.orden = H.orden.k===k ? {k, dir:-H.orden.dir} : {k, dir:-1}; pintarTablaPeriodos(); }
+});
+
+// ── Cálculo + render ─────────────────────────────────────────────────────
+function renderHistorico(){
+  const cliente = document.getElementById('h-cliente').value;
+  const desde = fechaInputLocal(document.getElementById('h-desde').value);
+  const hasta = fechaInputLocal(document.getElementById('h-hasta').value);
+  const qTxt = document.getElementById('h-buscar').value.trim(), q = normTxt(qTxt);
+
+  H.filas = construirFilasHistorico().filter(f=>{
+    if(cliente && f.cliente!==cliente) return false;
+    if(desde && (!f.fechaObj || f.fechaObj < desde)) return false;
+    if(hasta && (!f.fechaObj || f.fechaObj > hasta)) return false;
+    if(q && !normTxt([f.ot,f.item,f.producto,f.cliente,f.lugar,f.personal,f.observaciones,f.hallazgos.map(h=>h.nombre).join(' ')].join(' ')).includes(q)) return false;
+    return true;
+  }).sort((a,b)=> (b.fh||0) - (a.fh||0));
+
+  H.periodos = agruparPeriodos(H.filas, H.modo);
+  H.lp = H.periodos.length ? cartaLaney(H.periodos) : { pb:0, sz:1 };
+  const T = agruparTurnos(H.filas); H.turnos = T.arr; H.tstats = T.stats; H.tipos = T.tipos;
+  // Aviso de calidad de datos: 100 % defectivo sin rechazos (lote completo marcado)
+  H.avisos = H.periodos.filter(o=>o.p>=0.99 && o.rech===0).map(o=>etiquetaPeriodo(o.k, H.modo, true));
+
+  const fechas = H.filas.map(f=>f.fechaObj).filter(Boolean);
+  const partes = [cliente || 'Todos los clientes'];
+  if(fechas.length){
+    const mn = new Date(Math.min(...fechas)), mx = new Date(Math.max(...fechas));
+    partes.push(`${mn.toLocaleDateString('es-MX')} al ${mx.toLocaleDateString('es-MX')}`);
+  }
+  if(qTxt) partes.push(`"${qTxt}"`);
+  document.getElementById('hist-sub').textContent = partes.join(' · ');
+  document.getElementById('hist-excel').disabled = !H.filas.length;
+
+  pintarKpis(); pintarAvisos(); pintarTablaPeriodos(); pintarTurnos(); pintarReportes(); pintarGraficasHistorico();
+}
+
+function pintarKpis(){
+  const P = H.periodos, N = P.reduce((s,o)=>s+o.insp,0), D = P.reduce((s,o)=>s+o.def,0), R = P.reduce((s,o)=>s+o.rech,0);
+  const nombre = { dia:['Días con inspección','día'], semana:['Semanas con inspección','semana'], mes:['Meses con inspección','mes'] }[H.modo];
+  const fuera = P.filter(o=>o.fuera).length, pb = N ? D/N : 0, pr = N ? R/N : 0;
+  const k = (l,v,s,cls)=>`<div class="hk"><div class="l">${l}</div><div class="v ${cls||''}">${v}</div><div class="s">${s}</div></div>`;
+  document.getElementById('hk-grid').innerHTML =
+    k(nombre[0], fmt(P.length), `${fmt(H.filas.length)} reportes`) +
+    k('Bolsas inspeccionadas', fmt(N), `Prom. ${fmt(P.length ? N/P.length : 0)} por ${nombre[1]}`) +
+    k('% defectivo (p̄)', pctF(pb), `${fmt(D)} con defecto`, pb>=0.10?'bad':pb<=0.03?'good':'') +
+    k('% rechazo', pctF(pr), `${fmt(R)} rechazadas`, pr>=0.10?'bad':'') +
+    k('Periodos fuera de control', fmt(fuera), `de ${fmt(P.length)} (carta p′)`, fuera?'bad':'good') +
+    k('Mediana bolsas / turno', fmt(H.tstats.med), `${fmt(H.tstats.n)} turnos con inspección`);
+}
+function pintarAvisos(){
+  document.getElementById('hist-avisos').innerHTML = H.avisos.length
+    ? `<div class="hist-aviso">⚠️ <b>Revisar captura:</b> ${esc(H.avisos.join(', '))} ${H.avisos.length>1?'registran':'registra'} 100 % defectivo con 0 rechazadas (probablemente el lote completo se marcó como defectuoso y se reacondicionó). Esto eleva el % defectivo; conviene registrar solo las bolsas realmente defectuosas.</div>`
+    : '';
+}
+function pintarTablaPeriodos(){
+  const {k, dir} = H.orden;
+  const filas = H.periodos.slice().sort((a,b)=> typeof a[k]==='string' ? dir*String(a[k]).localeCompare(String(b[k])) : dir*(a[k]-b[k]));
+  document.querySelectorAll('#tabla-periodo th[data-k]').forEach(th=>{
+    th.textContent = th.textContent.replace(/ [▲▼]$/,'') + (th.dataset.k===k ? (dir<0?' ▼':' ▲') : '');
+  });
+  document.querySelector('#tabla-periodo th[data-k="k"]').firstChild.textContent =
+    ({dia:'Fecha',semana:'Semana',mes:'Mes'})[H.modo] + (k==='k' ? (dir<0?' ▼':' ▲') : '');
+  const pcell = o=> o.fuera ? `<span class="fuera">◆ ${pctF(o.p)}</span>` : pctF(o.p);
+  document.querySelector('#tabla-periodo tbody').innerHTML = filas.length ? filas.map(o=>`<tr>
+    <td style="white-space:nowrap;">${etiquetaPeriodo(o.k,H.modo,true)}</td><td class="n">${fmt(o.rep)}</td><td class="n">${fmt(o.nOt)}</td>
+    <td class="n">${fmt(o.insp)}</td><td class="n">${fmt(o.def)}</td><td class="n">${pcell(o)}</td>
+    <td class="n">${fmt(o.rech)}</td><td class="n">${pctF(o.pr)}</td><td>${esc(o.top)}</td></tr>`).join('')
+    : '<tr><td colspan="9" class="hist-vacio">No hay reportes con estos filtros.</td></tr>';
+  document.getElementById('cards-periodo').innerHTML = filas.length ? filas.map(o=>`<div class="hc">
+    <div class="top"><div style="min-width:0;"><div class="t">${etiquetaPeriodo(o.k,H.modo,true)}</div><div class="meta">${fmt(o.rep)} reporte(s) · ${fmt(o.nOt)} OT</div></div>
+      <span class="pill ${o.fuera?'red':o.p>=0.03?'yellow':'green'}">${o.fuera?'◆ ':''}${pctF(o.p)}</span></div>
+    <div class="nums"><div><span>Inspecc.</span><b>${fmt(o.insp)}</b></div><div><span>Defecto</span><b>${fmt(o.def)}</b></div>
+      <div><span>Rechaz.</span><b style="color:var(--error)">${fmt(o.rech)}</b></div><div><span>% rechazo</span><b>${pctF(o.pr)}</b></div></div>
+    <div class="defs"><b>Defecto principal:</b> ${esc(o.top)}</div></div>`).join('')
+    : '<div class="hist-vacio">No hay reportes con estos filtros.</div>';
+}
+function pintarTurnos(){
+  const s = H.tstats;
+  const fila = (a,b,star)=>`<div class="${star?'star':''}">${a}</div><div class="${star?'star':''}">${b}</div>`;
+  document.getElementById('tstat').innerHTML =
+    fila('Turnos con inspección', fmt(s.n)) + fila('Mediana (turno típico) ★', fmt(s.med), true) +
+    fila('Q1 (percentil 25)', fmt(s.q1)) + fila('Q3 (percentil 75)', fmt(s.q3)) +
+    fila('Percentil 90 (turno muy bueno)', fmt(s.p90)) + fila('Límite atípico Q3 + 1.5·RIC', fmt(s.lim)) +
+    fila('Promedio simple', fmt(s.prom)) + fila('Promedio sin atípicos', fmt(s.promSin)) + fila('Turnos atípicos', fmt(s.atipicos));
+  document.querySelector('#tabla-tipo-turno tbody').innerHTML = H.tipos.map(t=>`<tr>
+    <td><b>${t.turno}</b> <span style="color:var(--muted);font-size:11.5px;">${({T1:'07–15 h',T2:'15–22 h',T3:'22–07 h'})[t.turno]}</span></td>
+    <td class="n">${fmt(t.n)}</td><td class="n">${fmt(t.rep)}</td><td class="n">${fmt(t.insp)}</td><td class="n">${pctF(t.pct)}</td><td class="n">${fmt(t.med)}</td></tr>`).join('');
+  document.querySelector('#tabla-turnos tbody').innerHTML = H.turnos.length ? H.turnos.slice().reverse().map(o=>`<tr>
+    <td style="white-space:nowrap;">${etiquetaPeriodo(o.fecha,'dia',true)}</td><td>${o.turno}</td><td class="n">${fmt(o.rep)}</td><td class="n">${fmt(o.insp)}</td>
+    <td>${o.atipico?'<span class="pill yellow">Sí · posible captura acumulada</span>':''}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="hist-vacio">Sin turnos con estos filtros.</td></tr>';
+}
+function pintarReportes(){
+  const F = H.filas;
+  const defHtml = f => f.hallazgos.length
+    ? f.hallazgos.map(h=>`${esc(h.nombre)}: <b>${fmt(h.hallada)}</b>`+(h.segregada||h.reacondicionada?` <span style="color:var(--muted)">(seg. ${fmt(h.segregada)}, reac. ${fmt(h.reacondicionada)})</span>`:'')).join('<br>')
+    : '<span style="color:var(--success);">Sin defectos</span>';
+  const clase = v => v>=10?'red':v>=3?'yellow':'green';
+  document.querySelector('#tabla-reportes tbody').innerHTML = F.length ? F.map(f=>`<tr>
+    <td style="white-space:nowrap;">${esc(f.fecha)}</td><td>${esc(f.cliente)}</td><td style="white-space:nowrap;"><b>${esc(f.ot)}</b></td><td>${esc(f.item)}</td>
+    <td class="txt">${esc(f.producto)}</td><td class="txt">${esc(f.lugar)}</td>
+    <td class="n">${fmt(f.revisadas)}</td><td class="n">${fmt(f.defectuoso)}</td><td class="n"><span class="pill ${clase(f.pct)}">${pct(f.pct)}</span></td>
+    <td class="n">${fmt(f.liberadas)}</td><td class="n">${fmt(f.rechazadas)}</td>
+    <td class="def">${defHtml(f)}</td><td class="txt">${esc(f.personal)}</td><td class="txt">${esc(f.observaciones)}</td></tr>`).join('')
+    : '<tr><td colspan="14" class="hist-vacio">No hay reportes con estos filtros.</td></tr>';
+  document.getElementById('cards-reportes').innerHTML = F.length ? F.map(f=>`<div class="hc">
+    <div class="top"><div style="min-width:0;"><div class="t">${esc(f.ot)} · Ítem ${esc(f.item)}</div><div class="meta">${esc(f.cliente)}${f.lugar?' · '+esc(f.lugar):''}</div></div>
+      <div style="text-align:right;"><div class="fecha">${esc(f.fecha)}</div><span class="pill ${clase(f.pct)}" style="margin-top:4px;">${pct(f.pct)}</span></div></div>
+    ${f.producto?`<div class="desc">${esc(f.producto)}</div>`:''}
+    <div class="nums"><div><span>Revisadas</span><b>${fmt(f.revisadas)}</b></div><div><span>Defecto</span><b>${fmt(f.defectuoso)}</b></div>
+      <div><span>Liberadas</span><b style="color:var(--success)">${fmt(f.liberadas)}</b></div><div><span>Rechaz.</span><b style="color:var(--error)">${fmt(f.rechazadas)}</b></div></div>
+    <div class="defs">${defHtml(f)}</div>
+    ${f.personal?`<div class="extra">👷 ${esc(f.personal)}</div>`:''}
+    ${f.observaciones?`<div class="extra">📝 ${esc(f.observaciones)}</div>`:''}
+  </div>`).join('') : '<div class="hist-vacio">No hay reportes con estos filtros.</div>';
+}
+
+// ── Gráficas (Chart.js, ya cargado por el Dashboard) ────────────────────
+// Las configuraciones se arman en funciones para usarlas igual en pantalla y
+// en el Excel (ahí se dibujan en alta resolución y se insertan como imagen).
+const COL_TURNO = {T1:'#2a78d6', T2:'#1baf7a', T3:'#4a3aa7'};
+const milesK = v => v>=1000 ? (v/1000).toLocaleString('es-MX',{maximumFractionDigits:1})+'k' : v;
+function ejeXHist(tam){ return { grid:{display:false}, ticks:{ maxRotation:0, autoSkip:true, autoSkipPadding:10, font:{size:tam}, color:'#5A7185' } }; }
+function ejeYHist(tam, extra){ return Object.assign({ beginAtZero:true, ticks:{ callback:milesK, color:'#5A7185', font:{size:tam} }, grid:{color:'rgba(0,0,0,.07)'} }, extra||{}); }
+
+function cfgBarras(P, tam){
+  return { type:'bar',
+    data:{ labels:P.map(o=>etiquetaPeriodo(o.k,H.modo)), datasets:[{ label:'Bolsas inspeccionadas', data:P.map(o=>o.insp), backgroundColor:'#2a78d6', borderRadius:4, maxBarThickness:40 }] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{
+        title:it=>etiquetaPeriodo(P[it[0].dataIndex].k, H.modo, true),
+        label:ctx=>{ const o=P[ctx.dataIndex]; return [`${fmt(o.insp)} bolsas`, `${o.rep} reporte(s) · ${o.nOt} OT`]; } } } },
+      scales:{ x:ejeXHist(tam), y:ejeYHist(tam) } } };
+}
+function cfgCarta(P, lp, tam, conLeyenda){
+  const ymax = Math.min(100, Math.ceil(Math.max(...P.map(o=>Math.max(o.p,o.ucl)))*100*1.08/5)*5 || 5);
+  const lim = (datos,lbl)=>({ label:lbl, data:datos, borderColor:'#8A9BAD', borderDash:[5,4], borderWidth:1.5, pointRadius:0, stepped:'middle', fill:false });
+  return { type:'line',
+    data:{ labels:P.map(o=>etiquetaPeriodo(o.k,H.modo)), datasets:[
+      { label:'% defectivo', data:P.map(o=>+(o.p*100).toFixed(2)), borderColor:'#2a78d6', backgroundColor:'#2a78d6', borderWidth:2, tension:0,
+        pointRadius:P.map(o=>o.fuera?7:3.5), pointHoverRadius:8, pointStyle:P.map(o=>o.fuera?'rectRot':'circle'),
+        pointBackgroundColor:P.map(o=>o.fuera?'#C0392B':'#2a78d6'), pointBorderColor:'#fff', pointBorderWidth:1.5 },
+      { label:'Media p̄ ('+pctF(lp.pb)+')', data:P.map(()=>+(lp.pb*100).toFixed(2)), borderColor:'#1A2B3C', borderWidth:1.5, pointRadius:0 },
+      lim(P.map(o=>+(o.ucl*100).toFixed(2)),'Límites de control (±3σ)'),
+      lim(P.map(o=>+(o.lcl*100).toFixed(2)),'LCI')
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ display:!!conLeyenda, position:'bottom', labels:{ font:{size:tam}, boxWidth:18, filter:it=>it.text!=='LCI' } },
+        tooltip:{ filter:it=>it.datasetIndex===0, callbacks:{
+          title:it=>etiquetaPeriodo(P[it[0].dataIndex].k, H.modo, true) + (P[it[0].dataIndex].fuera?'  ◆ fuera de control':''),
+          label:ctx=>{ const o=P[ctx.dataIndex]; return [`% defectivo: ${pctF(o.p)} (${fmt(o.def)} / ${fmt(o.insp)})`, `LCS ${pctF(o.ucl)} · LCI ${pctF(o.lcl)}`, `Defecto principal: ${o.top}`]; } } } },
+      scales:{ x:ejeXHist(tam), y:ejeYHist(tam,{ max:ymax, ticks:{ callback:v=>v+'%', color:'#5A7185', font:{size:tam} } }) } } };
+}
+function cfgTurnos(Tt, stats, tam){
+  return { type:'bar',
+    data:{ labels:Tt.map(o=>`${etiquetaPeriodo(o.fecha,'dia')} ${o.turno}`), datasets:[
+      { label:'Bolsas', data:Tt.map(o=>o.insp), backgroundColor:Tt.map(o=>o.atipico?'#eda100':COL_TURNO[o.turno]), borderRadius:3, maxBarThickness:24 },
+      { type:'line', label:'Mediana', data:Tt.map(()=>stats.med), borderColor:'#1A2B3C', borderDash:[5,4], borderWidth:1.5, pointRadius:0 }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{
+        title:it=>{ const o=Tt[it[0].dataIndex]; return `${etiquetaPeriodo(o.fecha,'dia',true)} · ${o.turno}`; },
+        label:ctx=>{ if(ctx.datasetIndex===1) return `Mediana: ${fmt(stats.med)}`; const o=Tt[ctx.dataIndex]; return [`${fmt(o.insp)} bolsas · ${o.rep} reporte(s)`].concat(o.atipico?['Atípico: posible captura acumulada']:[]); } } } },
+      scales:{ x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:true, autoSkipPadding:12, font:{size:tam}, color:'#5A7185' } }, y:ejeYHist(tam) } } };
+}
+// Pareto de defectos del periodo filtrado (el mismo criterio del Dashboard)
+function paretoHistorico(){
+  const m = {}; H.filas.forEach(f=>f.hallazgos.forEach(h=>{ m[h.nombre] = (m[h.nombre]||0) + h.hallada; }));
+  const arr = Object.entries(m).map(([nombre,cant])=>({nombre,cant})).filter(d=>d.cant>0).sort((a,b)=>b.cant-a.cant);
+  const tot = arr.reduce((s,d)=>s+d.cant,0); let ac = 0;
+  arr.forEach(d=>{ ac += d.cant; d.pct = tot ? d.cant/tot : 0; d.acum = tot ? ac/tot : 0; });
+  return arr;
+}
+function cfgPareto(D, tam){
+  const top = D.slice(0,10);
+  return { type:'bar',
+    data:{ labels:top.map(d=>d.nombre.length>22 ? d.nombre.slice(0,21)+'…' : d.nombre), datasets:[
+      { type:'bar', label:'Bolsas con el defecto', data:top.map(d=>d.cant), backgroundColor:'#005B96', borderRadius:4, yAxisID:'y', order:2 },
+      { type:'line', label:'% acumulado', data:top.map(d=>+(d.acum*100).toFixed(1)), borderColor:'#eda100', backgroundColor:'#eda100', yAxisID:'y1', tension:.25, pointRadius:4, order:1 }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{ legend:{ position:'bottom', labels:{ font:{size:tam}, boxWidth:14 } } },
+      scales:{ x:{ grid:{display:false}, ticks:{ autoSkip:false, maxRotation:35, minRotation:35, font:{size:tam-1}, color:'#1A2B3C' } },
+               y:ejeYHist(tam), y1:{ beginAtZero:true, max:100, position:'right', grid:{drawOnChartArea:false}, ticks:{ callback:v=>v+'%', color:'#5A7185', font:{size:tam} } } } } };
+}
+
+function pintarGraficasHistorico(){
+  if(typeof Chart==='undefined' || !document.getElementById('hist').classList.contains('abierto')) return;
+  Object.values(H.charts).forEach(c=>c.destroy()); H.charts = {};
+  const tam = window.matchMedia('(max-width:640px)').matches ? 10 : 11;
+  if(H.tab==='periodo' && H.periodos.length){
+    H.charts.barras = new Chart(document.getElementById('hc-barras'), cfgBarras(H.periodos, tam));
+    H.charts.carta = new Chart(document.getElementById('hc-carta'), cfgCarta(H.periodos, H.lp, tam, false));
+  }
+  if(H.tab==='turno' && H.turnos.length){
+    H.charts.turnos = new Chart(document.getElementById('hc-turnos'), cfgTurnos(H.turnos, H.tstats, tam));
+  }
+}
+window.addEventListener('resize', ()=>{ clearTimeout(H._rz); H._rz = setTimeout(pintarGraficasHistorico, 250); });
+
+// Dibuja una gráfica fuera de pantalla, en alta resolución y fondo blanco, y
+// devuelve la imagen PNG (para insertarla en el Excel).
+function graficaComoImagen(cfg, ancho, alto){
+  const cont = document.createElement('div');
+  cont.style.cssText = `position:fixed;left:-10000px;top:0;width:${ancho}px;height:${alto}px;`;
+  const cv = document.createElement('canvas'); cont.appendChild(cv); document.body.appendChild(cont);
+  cfg.options = Object.assign({}, cfg.options, { responsive:false, maintainAspectRatio:false, animation:false, devicePixelRatio:2 });
+  cfg.plugins = (cfg.plugins||[]).concat([{ id:'fondoBlanco', beforeDraw:c=>{ const x=c.ctx; x.save(); x.globalCompositeOperation='destination-over'; x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.restore(); } }]);
+  cv.width = ancho; cv.height = alto; cv.style.width = ancho+'px'; cv.style.height = alto+'px';
+  const ch = new Chart(cv, cfg);
+  const url = ch.toBase64Image('image/png', 1);
+  ch.destroy(); cont.remove();
+  return url;
+}
+
+// ── Exportar a Excel (con formato y gráficas) ─────────────────────────────
+// Se usa ExcelJS, que permite colores, bordes, celdas combinadas e imágenes.
+function cargarLibreriaExcel(){
+  if(window.ExcelJS) return Promise.resolve();
+  return new Promise((ok,mal)=>{
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    sc.onload = ()=> window.ExcelJS ? ok() : mal(new Error('Librería no disponible'));
+    sc.onerror = ()=> mal(new Error('No se pudo descargar la librería de Excel'));
+    document.head.appendChild(sc);
+  });
+}
+const XL = {
+  azul:'FF005B96', azulOsc:'FF003F6B', claro:'FFE8F1FA', borde:'FFC8D8E8', gris:'FF5A7185', texto:'FF1A2B3C',
+  rojo:'FFC0392B', rojoClaro:'FFFDEDEC', verde:'FF1D6A3A', verdeClaro:'FFEAFAF1', ambar:'FF8A6116', ambarClaro:'FFFEF6E7', zebra:'FFF7FAFD'
+};
+const fill = c=>({ type:'pattern', pattern:'solid', fgColor:{argb:c} });
+const bordeFino = { top:{style:'thin',color:{argb:XL.borde}}, left:{style:'thin',color:{argb:XL.borde}}, bottom:{style:'thin',color:{argb:XL.borde}}, right:{style:'thin',color:{argb:XL.borde}} };
+
+
+// ── Logo Flexigrip para el Excel ─────────────────────────────────────────
+// Se arma una "placa" blanca con esquinas redondeadas (igual que en el
+// encabezado del Dashboard) y dentro el logo. Si el navegador no permite
+// leer la imagen del logo, se usa el texto FLEXIGRIP con los colores de marca.
+const LOGO_URL = 'https://static.wixstatic.com/media/c78b4a_6df1a1ec619645b89210a1487fa416e1~mv2.png';
+function cargarImagenLogo(){
+  return new Promise(ok=>{
+    const im = new Image(); im.crossOrigin = 'anonymous';
+    const t = setTimeout(()=>ok(null), 6000);
+    im.onload = ()=>{ clearTimeout(t); ok(im); };
+    im.onerror = ()=>{ clearTimeout(t); ok(null); };
+    im.src = LOGO_URL + (LOGO_URL.includes('?') ? '&' : '?') + 'xl=1';
+  });
+}
+async function placaLogo(){
+  const W = 340, Hh = 104, pad = 14, esc2 = 2;
+  const cv = document.createElement('canvas'); cv.width = W*esc2; cv.height = Hh*esc2;
+  const x = cv.getContext('2d'); x.scale(esc2, esc2);
+  const r = 14; x.fillStyle = '#FFFFFF';
+  x.beginPath(); x.moveTo(r,0); x.arcTo(W,0,W,Hh,r); x.arcTo(W,Hh,0,Hh,r); x.arcTo(0,Hh,0,0,r); x.arcTo(0,0,W,0,r); x.closePath(); x.fill();
+  const im = await cargarImagenLogo();
+  let conLogo = false;
+  if(im && im.naturalWidth){
+    const k = Math.min((W-2*pad)/im.naturalWidth, (Hh-2*pad)/im.naturalHeight);
+    const w = im.naturalWidth*k, h = im.naturalHeight*k;
+    try{ x.drawImage(im, (W-w)/2, (Hh-h)/2, w, h); cv.toDataURL(); conLogo = true; }catch(e){ conLogo = false; }
+  }
+  if(!conLogo){ // respaldo: texto de marca
+    x.clearRect(0,0,W,Hh); x.fillStyle = '#FFFFFF';
+    x.beginPath(); x.moveTo(r,0); x.arcTo(W,0,W,Hh,r); x.arcTo(W,Hh,0,Hh,r); x.arcTo(0,Hh,0,0,r); x.arcTo(0,0,W,0,r); x.closePath(); x.fill();
+    x.fillStyle = '#005B96'; x.font = '800 44px Inter, Arial, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText('FLEXIGRIP', W/2, Hh/2+2);
+  }
+  return cv.toDataURL('image/png');
+}
+// Ancho en pixeles de una columna de Excel (ancho en caracteres → px)
+const pxCol = w => Math.round((w==null ? 8.43 : w)*7 + 5);
+// Coloca la placa del logo alineada a la derecha dentro de la banda del título
+function xlLogo(wb, ws, idLogo, ultimaCol){
+  const anchos = []; for(let c=1;c<=ultimaCol;c++) anchos.push(pxCol(ws.getColumn(c).width));
+  const total = anchos.reduce((a,b)=>a+b,0);
+  const ancho = 150, alto = 46, margen = 10;
+  let objetivo = Math.max(0, total - ancho - margen), col = 0;
+  while(col < anchos.length && objetivo >= anchos[col]){ objetivo -= anchos[col]; col++; }
+  ws.addImage(idLogo, { tl:{ col: col + objetivo/(anchos[col]||64), row: 0.28 }, ext:{ width:ancho, height:alto }, editAs:'oneCell' });
+}
+
+// Encabezado de hoja: banda azul con título + subtítulo
+function xlTitulo(ws, titulo, subtitulo, ultimaCol){
+  ws.mergeCells(1,1,1,ultimaCol); ws.mergeCells(2,1,2,ultimaCol);
+  const t = ws.getCell(1,1); t.value = titulo; t.font = { name:'Calibri', size:16, bold:true, color:{argb:'FFFFFFFF'} };
+  t.fill = fill(XL.azulOsc); t.alignment = { vertical:'middle', indent:1 };
+  const s = ws.getCell(2,1); s.value = subtitulo; s.font = { size:10.5, color:{argb:'FFCFE3F5'} }; s.fill = fill(XL.azul); s.alignment = { vertical:'middle', indent:1 };
+  ws.getRow(1).height = 34; ws.getRow(2).height = 22;
+  ws._ultimaColTitulo = ultimaCol; // para colocar el logo al final, ya con los anchos definitivos
+}
+// Tabla con encabezado azul, renglones alternados, formatos, autofiltro y panel fijo
+function xlTabla(ws, filaIni, columnas, filas, opciones){
+  opciones = opciones || {};
+  const hdr = ws.getRow(filaIni);
+  columnas.forEach((c,i)=>{
+    const cel = hdr.getCell(i+1); cel.value = c.t;
+    cel.font = { bold:true, color:{argb:'FFFFFFFF'}, size:10 }; cel.fill = fill(XL.azul); cel.border = bordeFino;
+    cel.alignment = { vertical:'middle', horizontal: c.n ? 'right' : 'left', wrapText:true };
+    ws.getColumn(i+1).width = Math.max(ws.getColumn(i+1).width||0, c.w || 12);
+  });
+  hdr.height = 30;
+  filas.forEach((f,r)=>{
+    const row = ws.getRow(filaIni+1+r);
+    columnas.forEach((c,i)=>{
+      const cel = row.getCell(i+1); cel.value = f[i];
+      cel.border = bordeFino; cel.font = { size:10, color:{argb:XL.texto} };
+      if(c.fmt) cel.numFmt = c.fmt;
+      cel.alignment = { vertical:'top', horizontal: c.n ? 'right' : 'left', wrapText: !!c.wrap };
+      if(r%2) cel.fill = fill(XL.zebra);
+    });
+    if(opciones.colorear) opciones.colorear(row, f);
+  });
+  if(filas.length) ws.autoFilter = { from:{row:filaIni, column:1}, to:{row:filaIni+filas.length, column:columnas.length} };
+  ws.views = [{ state:'frozen', ySplit:filaIni, xSplit: opciones.fijarCol ? 1 : 0, showGridLines:false }];
+}
+function xlImagen(wb, ws, dataUrl, col, fila, ancho, alto){
+  const id = wb.addImage({ base64:dataUrl, extension:'png' });
+  ws.addImage(id, { tl:{ col:col, row:fila }, ext:{ width:ancho, height:alto } });
+}
+function xlSeccion(ws, fila, texto, ultimaCol){
+  ws.mergeCells(fila,1,fila,ultimaCol);
+  const c = ws.getCell(fila,1); c.value = texto;
+  c.font = { bold:true, size:12, color:{argb:XL.azulOsc} };
+  c.border = { bottom:{style:'medium', color:{argb:XL.azul}} };
+  ws.getRow(fila).height = 22;
+}
+function xlPie(ws){
+  ws.pageSetup = { orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0, paperSize:9, margins:{left:.4,right:.4,top:.5,bottom:.5,header:.3,footer:.3} };
+  ws.headerFooter = { oddFooter:'&L&8Flexigrip · Soporte Técnico&C&8&A&R&8Página &P de &N' };
+}
+
+async function exportarHistoricoExcel(){
+  if(!H.filas.length) return;
+  const btn = document.getElementById('hist-excel'), orig = btn.innerHTML;
+  btn.disabled = true; btn.textContent = '⏳ Generando...';
+  try{
+    await cargarLibreriaExcel();
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'Flexigrip · Soporte Técnico'; wb.created = new Date();
+    const P = H.periodos, N = P.reduce((s,o)=>s+o.insp,0), D = P.reduce((s,o)=>s+o.def,0), R = P.reduce((s,o)=>s+o.rech,0);
+    const nomPer = ({dia:'Fecha',semana:'Semana',mes:'Mes'})[H.modo], nomPlural = ({dia:'Días',semana:'Semanas',mes:'Meses'})[H.modo], unidad = ({dia:'día',semana:'semana',mes:'mes'})[H.modo];
+    const cliente = document.getElementById('h-cliente').value || 'Todos los clientes';
+    const sub = `${document.getElementById('hist-sub').textContent}  ·  Agrupado por ${unidad}  ·  Generado ${new Date().toLocaleString('es-MX')}`;
+    const pareto = paretoHistorico();
+    const fuera = P.filter(o=>o.fuera).length, pb = N? D/N : 0, pr = N? R/N : 0;
+
+    // Imágenes de las gráficas (idénticas a las del Dashboard)
+    const img = {};
+    if(P.length){
+      img.barras = graficaComoImagen(cfgBarras(P, 13), 1100, 380);
+      img.carta = graficaComoImagen(cfgCarta(P, H.lp, 13, true), 1100, 430);
+    }
+    if(H.turnos.length) img.turnos = graficaComoImagen(cfgTurnos(H.turnos, H.tstats, 12), 1000, 380);
+    if(pareto.length) img.pareto = graficaComoImagen(cfgPareto(pareto, 12), 760, 420);
+
+    // ── 1) Resumen ──
+    const ws = wb.addWorksheet('Resumen', { properties:{ tabColor:{argb:XL.azul} } });
+    ws.columns = Array.from({length:12}, ()=>({ width:12.5 }));
+    xlTitulo(ws, `Histórico de inspección — ${cliente}`, sub, 12);
+    // Tarjetas KPI: 6 tarjetas de 2 columnas cada una
+    const kpis = [
+      [`${nomPlural} con inspección`, P.length, '#,##0', `${fmt(H.filas.length)} reportes`, XL.texto],
+      ['Bolsas inspeccionadas', N, '#,##0', `Prom. ${fmt(P.length? N/P.length:0)} por ${unidad}`, XL.texto],
+      ['% defectivo (p̄)', pb, '0.0%', `${fmt(D)} con defecto`, pb>=0.10?XL.rojo:pb<=0.03?XL.verde:XL.texto],
+      ['% rechazo', pr, '0.0%', `${fmt(R)} rechazadas`, pr>=0.10?XL.rojo:XL.texto],
+      ['Periodos fuera de control', fuera, '#,##0', `de ${fmt(P.length)} (carta p′)`, fuera?XL.rojo:XL.verde],
+      ['Mediana bolsas / turno', Math.round(H.tstats.med), '#,##0', `${fmt(H.tstats.n)} turnos`, XL.texto]
+    ];
+    ws.getRow(4).height = 18; ws.getRow(5).height = 30; ws.getRow(6).height = 16;
+    kpis.forEach((k,i)=>{
+      const c = 1 + i*2;
+      [[4,k[0]],[5,k[1]],[6,k[3]]].forEach(([r,v])=>{ ws.mergeCells(r,c,r,c+1); const cel = ws.getCell(r,c); cel.value = v; cel.fill = fill(XL.claro); cel.alignment = { horizontal:'center', vertical:'middle', wrapText:true }; });
+      ws.getCell(4,c).font = { bold:true, size:9, color:{argb:XL.gris} };
+      const v = ws.getCell(5,c); v.font = { bold:true, size:18, color:{argb:k[4]} }; v.numFmt = k[2];
+      ws.getCell(6,c).font = { size:9, color:{argb:XL.gris} };
+      for(let r=4;r<=6;r++) for(let cc=c;cc<=c+1;cc++){
+        const b = {}; if(r===4) b.top={style:'thin',color:{argb:XL.borde}}; if(r===6) b.bottom={style:'thin',color:{argb:XL.borde}};
+        if(cc===c) b.left={style:'medium',color:{argb:'FFFFFFFF'}}; if(cc===c+1) b.right={style:'medium',color:{argb:'FFFFFFFF'}};
+        ws.getCell(r,cc).border = b;
+      }
+    });
+    let fila = 8;
+    if(H.avisos.length){
+      ws.mergeCells(fila,1,fila,12);
+      const a = ws.getCell(fila,1); a.value = `⚠ Revisar captura: ${H.avisos.join(', ')} — 100 % defectivo con 0 rechazadas (probablemente el lote completo se marcó como defectuoso). Esto eleva el % defectivo.`;
+      a.fill = fill(XL.ambarClaro); a.font = { size:10, color:{argb:XL.ambar}, bold:true }; a.alignment = { wrapText:true, vertical:'middle', indent:1 };
+      ws.getRow(fila).height = 32; fila += 2;
+    }
+    if(img.barras){
+      xlSeccion(ws, fila, 'Bolsas inspeccionadas por '+unidad, 12); fila += 1;
+      xlImagen(wb, ws, img.barras, 0, fila, 1100*0.78, 380*0.78); fila += 16;
+      ws.getRow(fila-1).addPageBreak();
+      xlSeccion(ws, fila, '% defectivo — carta de control p′ (Laney)   ◆ = fuera de control', 12); fila += 1;
+      xlImagen(wb, ws, img.carta, 0, fila, 1100*0.78, 430*0.78); fila += 18;
+    }
+    if(pareto.length){
+      if(img.barras) ws.getRow(fila-1).addPageBreak();
+      xlSeccion(ws, fila, 'Defectos más frecuentes (Pareto)', 12); fila += 1;
+      xlImagen(wb, ws, img.pareto, 0, fila, 760*0.72, 420*0.72);
+      // tabla del Pareto a la derecha de la gráfica
+      const ini = fila; const cols = [7,10,11,12];
+      ws.mergeCells(ini,7,ini,9);
+      ['Defecto','Bolsas','% del total','% acumulado'].forEach((t,i)=>{ const c = ws.getCell(ini, cols[i]); c.value=t; c.font={bold:true,color:{argb:'FFFFFFFF'},size:9.5}; c.fill=fill(XL.azul); c.border=bordeFino; c.alignment={horizontal:i?'right':'left',vertical:'middle'}; });
+      pareto.slice(0,12).forEach((d,i)=>{
+        const r = ini+1+i; ws.mergeCells(r,7,r,9);
+        [[d.nombre,null],[d.cant,'#,##0'],[d.pct,'0.0%'],[d.acum,'0.0%']].forEach(([v,f],j)=>{
+          const c = ws.getCell(r, cols[j]); c.value = v; if(f) c.numFmt = f; c.border = bordeFino; c.font = { size:9.5 };
+          c.alignment = { horizontal:j?'right':'left', vertical:'middle', wrapText:j===0 }; if(i%2) c.fill = fill(XL.zebra);
+        });
+      });
+      fila += 17;
+    }
+    xlPie(ws); ws.views = [{ showGridLines:false }];
+
+    // ── 2) Por periodo ──
+    const wp = wb.addWorksheet('Por periodo', { properties:{ tabColor:{argb:'FF2A78D6'} } });
+    xlTitulo(wp, `Histórico por ${unidad} — ${cliente}`, 'Carta p′ de Laney: LCS/LCI = p̄ ± 3·σi·σz  ·  ◆ = fuera de control (causa especial a investigar)', 16);
+    xlTabla(wp, 4, [
+      {t:nomPer,w:22},{t:'Reportes',n:1,w:9,fmt:'#,##0'},{t:'OT',n:1,w:7,fmt:'#,##0'},{t:'Bolsas inspeccionadas',n:1,w:14,fmt:'#,##0'},
+      {t:'Bolsas con defecto',n:1,w:12,fmt:'#,##0'},{t:'% defectivo',n:1,w:11,fmt:'0.00%'},{t:'Bolsas rechazadas',n:1,w:12,fmt:'#,##0'},{t:'% rechazo',n:1,w:10,fmt:'0.00%'},
+      {t:'p̄',n:1,w:8,fmt:'0.00%'},{t:'σi',n:1,w:8,fmt:'0.0000'},{t:'z',n:1,w:8,fmt:'0.00'},{t:'MR',n:1,w:8,fmt:'0.00'},
+      {t:'LCS',n:1,w:9,fmt:'0.00%'},{t:'LCI',n:1,w:9,fmt:'0.00%'},{t:'Estado',w:18},{t:'Defecto principal',w:34,wrap:1}
+    ], P.slice().reverse().map(o=>[etiquetaPeriodo(o.k,H.modo,true), o.rep, o.nOt, o.insp, o.def, o.p, o.rech, o.pr, o.pb, o.si, o.z, o.mr==null?null:o.mr, o.ucl, o.lcl, o.fuera?'◆ Fuera de control':'En control', o.top]),
+    { fijarCol:true, colorear:(row,f)=>{
+        if(String(f[14]).startsWith('◆')){ [6,15].forEach(c=>{ const x=row.getCell(c); x.fill=fill(XL.rojoClaro); x.font={bold:true,size:10,color:{argb:XL.rojo}}; }); }
+        else row.getCell(15).font = { size:10, color:{argb:XL.verde} };
+      } });
+    // renglón de totales
+    const rt = 5 + P.length, tot = wp.getRow(rt);
+    [['Total',null],[H.filas.length,'#,##0'],[null,null],[N,'#,##0'],[D,'#,##0'],[pb,'0.00%'],[R,'#,##0'],[pr,'0.00%']].forEach(([v,f],i)=>{
+      const c = tot.getCell(i+1); c.value = v; if(f) c.numFmt = f; c.font = { bold:true, size:10.5, color:{argb:XL.azulOsc} }; c.fill = fill(XL.claro);
+      c.border = { top:{style:'medium',color:{argb:XL.azul}}, bottom:{style:'thin',color:{argb:XL.borde}} }; c.alignment = { horizontal:i?'right':'left' };
+    });
+    xlPie(wp);
+
+    // ── 3) Turnos ──
+    const wt = wb.addWorksheet('Turnos', { properties:{ tabColor:{argb:'FF1BAF7A'} } });
+    xlTitulo(wt, `Bolsas inspeccionadas por turno — ${cliente}`, 'T1 07–15 h · T2 15–22 h · T3 22–07 h (el T3 cuenta para el día en que inició)  ·  Atípico = más de Q3 + 1.5·RIC (Tukey)', 12);
+    let ft = 4;
+    if(img.turnos){ xlImagen(wb, wt, img.turnos, 0, ft-1, 1000*0.8, 380*0.8); ft += 17; }
+    const s = H.tstats;
+    xlSeccion(wt, ft, 'Estadísticos por turno', 12); ft += 1;
+    xlTabla(wt, ft, [{t:'Indicador',w:14},{t:'',w:12},{t:'Valor',n:1,w:12,fmt:'#,##0'}], [
+      ['Turnos con inspección',null,s.n],['Mediana (turno típico) ★',null,Math.round(s.med)],['Q1 (percentil 25)',null,Math.round(s.q1)],['Q3 (percentil 75)',null,Math.round(s.q3)],
+      ['Percentil 90 (turno muy bueno)',null,Math.round(s.p90)],['Límite atípico Q3 + 1.5·RIC',null,Math.round(s.lim)],['Promedio simple',null,Math.round(s.prom)],
+      ['Promedio sin atípicos',null,Math.round(s.promSin)],['Turnos atípicos',null,s.atipicos]
+    ], { colorear:(row,f)=>{ if(String(f[0]).includes('★')) [1,3].forEach(c=>row.getCell(c).font={bold:true,size:10,color:{argb:XL.azul}}); } });
+    for(let r=ft+1; r<=ft+9; r++) wt.mergeCells(r,1,r,2);
+    // resumen por tipo de turno, a la derecha
+    const ct = 5, hdrT = ['Turno','Horario','Turnos','Reportes','Bolsas','% del total','Mediana / turno'];
+    hdrT.forEach((t,i)=>{ const c = wt.getCell(ft, ct+i); c.value=t; c.font={bold:true,color:{argb:'FFFFFFFF'},size:10}; c.fill=fill(XL.azul); c.border=bordeFino; c.alignment={horizontal:i>1?'right':'left',vertical:'middle',wrapText:true}; });
+    H.tipos.forEach((t,j)=>{
+      [[t.turno,null],[({T1:'07–15 h',T2:'15–22 h',T3:'22–07 h'})[t.turno],null],[t.n,'#,##0'],[t.rep,'#,##0'],[t.insp,'#,##0'],[t.pct,'0.0%'],[Math.round(t.med),'#,##0']].forEach(([v,f],i)=>{
+        const c = wt.getCell(ft+1+j, ct+i); c.value=v; if(f) c.numFmt=f; c.border=bordeFino; c.font={size:10,bold:i===0,color:{argb: i===0 ? COL_TURNO[t.turno].replace('#','FF') : XL.texto}}; c.alignment={horizontal:i>1?'right':'left'};
+      });
+    });
+    [11,12,9,10,13,11,13].forEach((w,i)=>{ wt.getColumn(ct+i).width = Math.max(wt.getColumn(ct+i).width||0, w); });
+    ft += 11;
+    xlSeccion(wt, ft, 'Detalle por turno', 12); ft += 1;
+    const wsTurnoIni = ft;
+    xlTabla(wt, ft, [{t:'Fecha turno',w:14},{t:'Turno',w:12},{t:'Reportes',n:1,w:12,fmt:'#,##0'},{t:'Bolsas inspeccionadas',n:1,w:12,fmt:'#,##0'},{t:'Atípico (Tukey)',w:11}],
+      H.turnos.slice().reverse().map(o=>[etiquetaPeriodo(o.fecha,'dia',true), o.turno, o.rep, o.insp, o.atipico?'Sí (posible captura acumulada)':'']),
+      { colorear:(row,f)=>{ if(f[4]){ [4,5].forEach(c=>{ const x=row.getCell(c); x.fill=fill(XL.ambarClaro); x.font={bold:true,size:10,color:{argb:XL.ambar}}; }); } } });
+    wt.views = [{ showGridLines:false }];
+    xlPie(wt);
+
+    // ── 4) Reportes ──
+    const wr = wb.addWorksheet('Reportes', { properties:{ tabColor:{argb:'FF4A3AA7'} } });
+    xlTitulo(wr, `Reportes — ${cliente}`, `${fmt(H.filas.length)} reporte(s) con los filtros aplicados`, 16);
+    xlTabla(wr, 4, [
+      {t:'Fecha',w:16},{t:'Turno',w:7},{t:'Cliente',w:18},{t:'Número de OT',w:13},{t:'Ítem',w:13},{t:'Producto',w:30,wrap:1},{t:'Lugar de servicio',w:24,wrap:1},
+      {t:'Bolsas revisadas',n:1,w:11,fmt:'#,##0'},{t:'Bolsas con defecto',n:1,w:11,fmt:'#,##0'},{t:'% defectivo',n:1,w:10,fmt:'0.00%'},
+      {t:'Bolsas liberadas',n:1,w:11,fmt:'#,##0'},{t:'Bolsas rechazadas',n:1,w:11,fmt:'#,##0'},{t:'Defectos',w:38,wrap:1},{t:'Personal',w:26,wrap:1},{t:'Observaciones',w:34,wrap:1},{t:'ID reporte',w:14}
+    ], H.filas.map(f=>[f.fecha, f.turno, f.cliente, f.ot, f.item, f.producto, f.lugar, f.revisadas, f.defectuoso, f.revisadas?f.defectuoso/f.revisadas:0, f.liberadas, f.rechazadas,
+      f.hallazgos.map(h=>`${h.nombre}: ${h.hallada.toLocaleString('es-MX')}`).join('\n') || 'Sin defectos', f.personal, f.observaciones, f.id]),
+    { fijarCol:true, colorear:(row,f)=>{ const p=f[9], c=row.getCell(10);
+        c.font = { bold:true, size:10, color:{argb: p>=0.10?XL.rojo : p>=0.03?XL.ambar : XL.verde} }; } });
+    xlPie(wr);
+
+    // ── 5) Hallazgos ──
+    const wh = wb.addWorksheet('Hallazgos', { properties:{ tabColor:{argb:'FFEDA100'} } });
+    xlTitulo(wh, `Hallazgos por defecto — ${cliente}`, 'Un renglón por defecto registrado (listo para tablas dinámicas)', 10);
+    const hall = []; H.filas.forEach(f=>f.hallazgos.forEach(h=>hall.push([f.fecha, f.cliente, f.ot, f.item, h.nombre, h.hallada, h.segregada, h.reacondicionada, f.revisadas? h.hallada/f.revisadas : 0, f.id])));
+    xlTabla(wh, 4, [{t:'Fecha',w:16},{t:'Cliente',w:18},{t:'Número de OT',w:13},{t:'Ítem',w:13},{t:'Defecto',w:34,wrap:1},
+      {t:'Cantidad hallada',n:1,w:11,fmt:'#,##0'},{t:'Cantidad segregada',n:1,w:11,fmt:'#,##0'},{t:'Cantidad reacondicionada',n:1,w:13,fmt:'#,##0'},{t:'% del reporte',n:1,w:10,fmt:'0.00%'},{t:'ID reporte',w:14}],
+      hall.length ? hall : [['','','','','Sin defectos en los reportes filtrados','','','','','']]);
+    xlPie(wh);
+
+    // ── 6) Notas ──
+    const wn = wb.addWorksheet('Notas', { properties:{ tabColor:{argb:XL.gris} } });
+    wn.columns = [{width:112},{width:44}];
+    xlTitulo(wn, 'Método y referencias', 'Cómo se calcula cada indicador de este archivo', 2);
+    const notas = [
+      ['Método', null, true],
+      ['% defectivo = bolsas con defecto ÷ bolsas inspeccionadas del periodo.'],
+      ['Carta p′ de Laney: con lotes de miles de bolsas la carta p clásica da límites casi pegados a la media (todo saldría "fuera de control"). Laney corrige esa sobredispersión con σz = promedio de rangos móviles de z ÷ 1.128.'],
+      ['Límites: LCS/LCI = p̄ ± 3·σi·σz, con σi = √(p̄(1−p̄)/n) del periodo. ◆ = periodo fuera de control (causa especial a investigar).'],
+      ['Turnos: T1 07–15 h, T2 15–22 h, T3 22–07 h. El T3 cuenta para el día en que inició. La hora es la de captura del reporte.'],
+      ['Atípicos por turno: regla de Tukey (más de Q3 + 1.5·RIC). Se usa la mediana como valor típico porque no se distorsiona con turnos capturados en bloque.'],
+      [null],
+      ['Referencias', null, true],
+      ['Laney, D. B. (2002). Improved control charts for attributes. Quality Engineering, 14(4), 531–537.', 'https://doi.org/10.1081/QEN-120001878'],
+      ['Montgomery, D. C. (2019). Introduction to Statistical Quality Control (8.ª ed.). Wiley — cartas de control por atributos.', null],
+      ['Tukey, J. W. (1977). Exploratory Data Analysis. Addison-Wesley — regla de 1.5·RIC para atípicos.', null],
+      ['NIST/SEMATECH e-Handbook of Statistical Methods — cartas p y detección de atípicos.', 'https://www.itl.nist.gov/div898/handbook/']
+    ];
+    notas.forEach((n,i)=>{
+      const r = wn.getRow(4+i), a = r.getCell(1);
+      a.value = n[0]; a.alignment = { wrapText:true, vertical:'top' };
+      a.font = n[2] ? { bold:true, size:12, color:{argb:XL.azulOsc} } : { size:10.5, color:{argb:XL.texto} };
+      if(n[1]){ const b = r.getCell(2); b.value = { text:n[1], hyperlink:n[1] }; b.font = { size:10.5, color:{argb:'FF0563C1'}, underline:true }; }
+      if(!n[2] && n[0] && n[0].length>100) r.height = 30;
+    });
+    wn.views = [{ showGridLines:false }];
+
+    // Logo en la banda de título de cada hoja (al final, cuando ya se conocen los anchos)
+    const idLogo = wb.addImage({ base64: await placaLogo(), extension:'png' });
+    wb.worksheets.forEach(h=>{ if(h._ultimaColTitulo) xlLogo(wb, h, idLogo, h._ultimaColTitulo); });
+
+    // Descarga
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const hoy = new Date(), cli = document.getElementById('h-cliente').value;
+    const nombre = `Historico_Flexigrip_${cli?cli.replace(/[^A-Za-z0-9]+/g,'_')+'_':''}${H.modo}_${hoy.getFullYear()}-${dd2(hoy.getMonth()+1)}-${dd2(hoy.getDate())}.xlsx`;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nombre;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  }catch(err){
+    console.error(err);
+    alert('No se pudo generar el archivo de Excel. Revisa tu conexión a internet e intenta de nuevo.\n\n(' + err.message + ')');
+  }finally{
+    btn.innerHTML = orig; btn.disabled = !H.filas.length;
+  }
+}
 </script>
+
+<!-- ══ Ventana de Histórico ══ -->
+<div id="hist" role="dialog" aria-modal="true" aria-labelledby="hist-titulo" onclick="if(event.target===this)cerrarHistorico()">
+  <div class="hist-box">
+    <div class="hist-top">
+      <h2 id="hist-titulo">📜 Histórico de inspección<small id="hist-sub">Todos los clientes</small></h2>
+      <div class="hist-acciones">
+        <button type="button" class="hist-btn excel" id="hist-excel" onclick="exportarHistoricoExcel()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar a Excel
+        </button>
+        <button type="button" class="hist-btn cerrar" onclick="cerrarHistorico()">✕ Cerrar</button>
+      </div>
+    </div>
+    <div class="hist-filtros">
+      <div class="f full"><label for="h-cliente">Cliente</label><select id="h-cliente" onchange="renderHistorico()"></select></div>
+      <div class="f"><label for="h-desde">Desde</label><input type="date" id="h-desde" onchange="renderHistorico()"></div>
+      <div class="f"><label for="h-hasta">Hasta</label><input type="date" id="h-hasta" onchange="renderHistorico()"></div>
+      <div class="f full"><span class="lbl">Agrupar</span>
+        <div class="seg" id="h-modo" role="group" aria-label="Agrupar por">
+          <button type="button" data-m="dia" class="on">Día</button><button type="button" data-m="semana">Semana</button><button type="button" data-m="mes">Mes</button>
+        </div></div>
+      <div class="f buscar"><label for="h-buscar">Buscar</label><input type="text" id="h-buscar" placeholder="OT, ítem, producto, defecto, personal..." autocomplete="off" oninput="renderHistorico()"></div>
+    </div>
+    <div class="hist-tabs" role="tablist">
+      <button type="button" data-t="periodo" class="on">📈 Por periodo</button>
+      <button type="button" data-t="turno">🕐 Por turno</button>
+      <button type="button" data-t="reportes">📋 Reportes</button>
+    </div>
+    <div class="hist-cuerpo">
+      <!-- ── Por periodo ── -->
+      <div class="hist-panel on" id="hp-periodo">
+        <div class="hk-grid" id="hk-grid"></div>
+        <div id="hist-avisos"></div>
+        <div class="hist-card">
+          <h3>Bolsas inspeccionadas</h3>
+          <p class="hint">Volumen revisado por periodo (suma de bolsas revisadas en los reportes).</p>
+          <div class="hist-chart"><canvas id="hc-barras"></canvas></div>
+        </div>
+        <div class="hist-card">
+          <h3>% defectivo — carta de control p′ (Laney)</h3>
+          <p class="hint">Bolsas con defecto ÷ bolsas inspeccionadas. Límites ajustados por tamaño de lote y sobredispersión. ◆ = periodo fuera de control (causa especial a investigar).</p>
+          <div class="hist-chart" style="height:280px;"><canvas id="hc-carta"></canvas></div>
+          <div class="hist-leyenda">
+            <span><i style="width:16px;height:3px;background:#2a78d6;"></i>% defectivo</span>
+            <span><i style="width:16px;height:2px;background:#1A2B3C;"></i>Media p̄</span>
+            <span><i style="width:16px;border-top:2px dashed #8A9BAD;"></i>Límites de control (±3σ)</span>
+            <span style="color:var(--error);"><i style="width:9px;height:9px;background:var(--error);transform:rotate(45deg);"></i>Fuera de control</span>
+          </div>
+        </div>
+        <div class="hist-card">
+          <h3>Detalle por periodo</h3>
+          <p class="hint">Toca un encabezado para ordenar.</p>
+          <div class="tabla-scroll-h movil-cards">
+            <table class="tabla-h" id="tabla-periodo">
+              <thead><tr>
+                <th data-k="k">Fecha ▼</th><th class="n" data-k="rep">Reportes</th><th class="n" data-k="nOt">OT</th>
+                <th class="n" data-k="insp">Inspeccionadas</th><th class="n" data-k="def">Con defecto</th><th class="n" data-k="p">% defectivo</th>
+                <th class="n" data-k="rech">Rechazadas</th><th class="n" data-k="pr">% rechazo</th><th data-k="top">Defecto principal</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="hcards" id="cards-periodo"></div>
+        </div>
+      </div>
+
+      <!-- ── Por turno ── -->
+      <div class="hist-panel" id="hp-turno">
+        <div class="hist-card">
+          <h3>Bolsas inspeccionadas por turno</h3>
+          <p class="hint">T1 07–15 h · T2 15–22 h · T3 22–07 h (el T3 cuenta para el día en que inició). La hora es la de captura del reporte. Se usa la <b>mediana</b> como valor típico porque no se distorsiona con turnos capturados en bloque.</p>
+          <div class="grid-turno">
+            <div class="hist-chart" style="height:280px;"><canvas id="hc-turnos"></canvas></div>
+            <div class="tstat" id="tstat"></div>
+          </div>
+          <div class="hist-leyenda">
+            <span><i style="width:10px;height:10px;background:#2a78d6;border-radius:2px;"></i>T1</span>
+            <span><i style="width:10px;height:10px;background:#1baf7a;border-radius:2px;"></i>T2</span>
+            <span><i style="width:10px;height:10px;background:#4a3aa7;border-radius:2px;"></i>T3</span>
+            <span><i style="width:10px;height:10px;background:#eda100;border-radius:2px;"></i>Atípico (Tukey)</span>
+            <span><i style="width:16px;border-top:2px dashed #1A2B3C;"></i>Mediana</span>
+          </div>
+        </div>
+        <div class="hist-card">
+          <h3>Resumen por tipo de turno</h3>
+          <div class="tabla-scroll-h"><table class="tabla-h" id="tabla-tipo-turno"><thead><tr>
+            <th>Turno</th><th class="n">Turnos con inspección</th><th class="n">Reportes</th><th class="n">Bolsas</th><th class="n">% del total</th><th class="n">Mediana / turno</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="hist-card">
+          <h3>Detalle por turno</h3>
+          <p class="hint">"Atípico" = más bolsas de lo normal (&gt; Q3 + 1.5·RIC); suele indicar reportes capturados de golpe al final del turno.</p>
+          <div class="tabla-scroll-h"><table class="tabla-h" id="tabla-turnos"><thead><tr>
+            <th>Fecha turno</th><th>Turno</th><th class="n">Reportes</th><th class="n">Bolsas inspeccionadas</th><th>Atípico</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- ── Reportes ── -->
+      <div class="hist-panel" id="hp-reportes">
+        <div class="hist-card" style="padding:0;overflow:hidden;">
+          <div class="tabla-scroll-h movil-cards">
+            <table class="tabla-h" id="tabla-reportes"><thead><tr>
+              <th>Fecha</th><th>Cliente</th><th>OT</th><th>Ítem</th><th>Producto</th><th>Lugar de servicio</th>
+              <th class="n">Revisadas</th><th class="n">Con defecto</th><th class="n">% defecto</th><th class="n">Liberadas</th><th class="n">Rechazadas</th>
+              <th>Defectos</th><th>Personal</th><th>Observaciones</th>
+            </tr></thead><tbody></tbody></table>
+          </div>
+          <div class="hcards" id="cards-reportes" style="padding:12px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
