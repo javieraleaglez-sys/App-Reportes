@@ -88,6 +88,19 @@
   .orden-movil{display:none;gap:8px;align-items:center;margin-bottom:12px;font-size:12px;color:var(--muted);}
   .orden-movil select{padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;background:#fff;color:var(--text);}
 
+  /* Evidencias (fotos de Drive) */
+  .fotos{display:flex;flex-wrap:wrap;gap:6px;}
+  .foto-mini{width:56px;height:56px;border-radius:7px;border:1.5px solid var(--border);background:var(--accent);overflow:hidden;cursor:pointer;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--primary);font-weight:700;text-decoration:none;font-family:inherit;}
+  .foto-mini img{width:100%;height:100%;object-fit:cover;display:block;}
+  .foto-mas{background:var(--primary);color:#fff;border-color:var(--primary);}
+  .ot-card .fotos{margin-top:10px;}
+  .ot-card .foto-mini{width:64px;height:64px;}
+  #visor{display:none;position:fixed;inset:0;background:rgba(10,20,30,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:16px;padding-top:max(16px, env(safe-area-inset-top));}
+  #visor img{max-width:100%;max-height:72vh;border-radius:8px;background:#222;object-fit:contain;}
+  #visor .visor-info{color:#CFE3F5;font-size:13px;margin:12px 0 8px;text-align:center;}
+  #visor .visor-bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  #visor .visor-bar button,#visor .visor-bar a{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;font-family:inherit;}
+  #visor .visor-error{display:none;color:#fff;background:rgba(192,57,43,.35);border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.5;max-width:420px;text-align:center;}
   #estado-carga{display:none;text-align:center;padding:60px 20px;color:var(--muted);}
   #estado-vacio{display:none;text-align:center;padding:60px 20px;color:var(--muted);}
   #contenido{display:none;}
@@ -263,6 +276,7 @@
             <th>Defectos detectados</th>
             <th data-key="defectuoso" style="cursor:pointer;">Total defectuoso ↕</th>
             <th data-key="pct" style="cursor:pointer;">% de lo inspeccionado ↕</th>
+            <th>Evidencias</th>
           </tr>
         </thead>
         <tbody id="tabla-ot"></tbody>
@@ -273,6 +287,19 @@
 
   </div>
 </div>
+<!-- Visor de fotos de evidencia -->
+<div id="visor" onclick="if(event.target===this)cerrarVisor()">
+  <img id="visor-img" alt="Evidencia" referrerpolicy="no-referrer">
+  <div class="visor-error" id="visor-error">No se pudo mostrar la foto aquí. Probablemente el archivo en Drive no está compartido como <b>"Cualquier persona con el enlace"</b>. Puedes abrirla directo en Drive con el botón de abajo.</div>
+  <div class="visor-info" id="visor-info"></div>
+  <div class="visor-bar">
+    <button type="button" onclick="moverVisor(-1)">◀</button>
+    <a id="visor-drive" href="#" target="_blank" rel="noopener">Abrir en Drive</a>
+    <button type="button" onclick="moverVisor(1)">▶</button>
+    <button type="button" onclick="cerrarVisor()">✕ Cerrar</button>
+  </div>
+</div>
+
 <script>
 // ══════════════════════════════════════════════════════════════════════
 // CONFIGURACIÓN — misma base de datos que usa el formulario
@@ -290,6 +317,88 @@ function num(v){ const n = Number(v); return isNaN(n) ? 0 : n; }
 function fmt(n){ return Math.round(n).toLocaleString('es-MX'); }
 function pct(n){ return n.toLocaleString('es-MX',{minimumFractionDigits:1,maximumFractionDigits:1}) + '%'; }
 function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ── Evidencias: fotos guardadas en Drive ────────────────────────────────
+// Busca en cada reporte cualquier columna cuyo nombre tenga "evidencia",
+// "foto" o "imagen", saca los enlaces de Drive y arma miniaturas.
+const RE_CAMPO_FOTO = /evidenc|foto|imagen/i;
+function idDrive(url){
+  const m = String(url).match(/\/d\/([\w-]{20,})/) || String(url).match(/[?&]id=([\w-]{20,})/);
+  return m ? m[1] : null;
+}
+function extraerFotos(r){
+  const fotos = [];
+  Object.keys(r).forEach(k=>{
+    if(!RE_CAMPO_FOTO.test(k)) return;
+    const urls = String(r[k]||'').match(/https?:\/\/[^\s,;"'<>]+/g) || [];
+    urls.forEach(u=>{
+      const id = idDrive(u);
+      fotos.push(id
+        ? { id, mini:`https://drive.google.com/thumbnail?id=${id}&sz=w240`, grande:`https://drive.google.com/thumbnail?id=${id}&sz=w1600`, abrir:`https://drive.google.com/file/d/${id}/view` }
+        : { id:null, mini:u, grande:u, abrir:u });
+    });
+  });
+  return fotos;
+}
+function miniaturasHtml(fotos, clave, max){
+  if(!fotos.length) return '<span style="color:var(--muted);font-size:12px;">Sin fotos</span>';
+  const vis = fotos.slice(0, max);
+  const resto = fotos.length - vis.length;
+  return '<div class="fotos">' + vis.map((f,i)=>
+    `<button type="button" class="foto-mini" onclick="abrirVisor('${clave}',${i})" title="Ver foto ${i+1}">`+
+      `<img src="${esc(f.mini)}" alt="Evidencia ${i+1}" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(document.createTextNode('📷 ${i+1}'))">`+
+    `</button>`).join('') +
+    (resto>0 ? `<button type="button" class="foto-mini foto-mas" onclick="abrirVisor('${clave}',${max})">+${resto}</button>` : '') +
+  '</div>';
+}
+
+// Visor a pantalla completa
+const FOTOS_POR_OT = {};
+let visorLista = [], visorIdx = 0, visorTitulo = '';
+function abrirVisor(clave, idx){
+  const g = FOTOS_POR_OT[clave]; if(!g || !g.fotos.length) return;
+  visorLista = g.fotos; visorTitulo = g.titulo; visorIdx = Math.min(idx, visorLista.length-1);
+  document.getElementById('visor').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  mostrarFotoVisor();
+}
+function mostrarFotoVisor(){
+  const f = visorLista[visorIdx];
+  const img = document.getElementById('visor-img');
+  const err = document.getElementById('visor-error');
+  err.style.display = 'none'; img.style.display = 'block';
+  img.onerror = ()=>{ img.style.display='none'; err.style.display='block'; };
+  img.src = f.grande;
+  document.getElementById('visor-drive').href = f.abrir;
+  document.getElementById('visor-info').textContent = `${visorTitulo} · foto ${visorIdx+1} de ${visorLista.length}`;
+}
+function moverVisor(d){
+  if(!visorLista.length) return;
+  visorIdx = (visorIdx + d + visorLista.length) % visorLista.length;
+  mostrarFotoVisor();
+}
+function cerrarVisor(){
+  document.getElementById('visor').style.display = 'none';
+  document.body.style.overflow = '';
+  document.getElementById('visor-img').src = '';
+}
+document.addEventListener('keydown', e=>{
+  if(document.getElementById('visor').style.display!=='flex') return;
+  if(e.key==='Escape') cerrarVisor();
+  if(e.key==='ArrowLeft') moverVisor(-1);
+  if(e.key==='ArrowRight') moverVisor(1);
+});
+// Deslizar con el dedo en el celular
+(function(){
+  let x0 = null;
+  const v = document.getElementById('visor');
+  v.addEventListener('touchstart', e=>{ x0 = e.touches[0].clientX; }, {passive:true});
+  v.addEventListener('touchend', e=>{
+    if(x0===null) return;
+    const dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if(Math.abs(dx) > 50) moverVisor(dx < 0 ? 1 : -1);
+  }, {passive:true});
+})();
 
 // Convierte la fecha de la Sheet a un Date (día local, sin hora).
 // Acepta "17/7/2026 21:01:14" o ISO "2026-07-17T08:58:22.000Z" (celda con
@@ -350,6 +459,13 @@ async function diagnosticar(){
     log('   Reportes recibidos: ' + data.reportes.length);
     log('   Hallazgos recibidos: ' + (data.hallazgos||[]).length);
     if(data.reportes.length){
+      const camposFoto = Object.keys(data.reportes[0]).filter(k=>RE_CAMPO_FOTO.test(k));
+      const conFotos = data.reportes.filter(r=>extraerFotos(r).length).length;
+      log('\n📷 Columnas de evidencias detectadas: ' + (camposFoto.length ? camposFoto.join(', ') : '❌ ninguna (el servidor no está enviando la columna de fotos)'));
+      log('   Reportes con enlaces de fotos: ' + conFotos + ' de ' + data.reportes.length);
+      const ej = data.reportes.find(r=>extraerFotos(r).length);
+      if(ej){ log('   Ejemplo de enlace: ' + extraerFotos(ej)[0].abrir); }
+      else if(camposFoto.length){ log('   Ejemplo del valor guardado: ' + String(data.reportes[0][camposFoto[0]]).slice(0,200)); }
       log('\n2) Primer reporte recibido (para revisar que los campos vengan bien):');
       log(JSON.stringify(data.reportes[0], null, 2));
     }
@@ -527,7 +643,8 @@ function agruparPorOT(reportes, hallazgos){
   const idAKey = {};
   reportes.forEach(r=>{
     const key = (r['Cliente']||'') + '|' + (r['Número de OT']||'');
-    if(!mapa[key]) mapa[key] = { ot: r['Número de OT']||'(sin OT)', cliente: r['Cliente']||'(sin cliente)', item: r['Item']||'', revisado:0, liberadas:0, rechazadas:0, defectos:{} };
+    if(!mapa[key]) mapa[key] = { ot: r['Número de OT']||'(sin OT)', cliente: r['Cliente']||'(sin cliente)', item: r['Item']||'', revisado:0, liberadas:0, rechazadas:0, defectos:{}, fotos:[] };
+    mapa[key].fotos.push(...extraerFotos(r));
     mapa[key].revisado += num(r['Cantidad total de bolsas recibidas']);
     mapa[key].liberadas += num(r['Cantidad de bolsas liberadas']);
     mapa[key].rechazadas += num(r['Cantidad de bolsas rechazadas']);
@@ -545,7 +662,7 @@ function agruparPorOT(reportes, hallazgos){
   return Object.values(mapa).map(o=>{
     const totalDefectuoso = Object.values(o.defectos).reduce((s,v)=>s+v,0);
     return {
-      ot:o.ot, cliente:o.cliente, item:o.item, revisado:o.revisado, liberadas:o.liberadas, rechazadas:o.rechazadas,
+      ot:o.ot, cliente:o.cliente, item:o.item, revisado:o.revisado, liberadas:o.liberadas, rechazadas:o.rechazadas, fotos:o.fotos,
       defectuoso: totalDefectuoso,
       pct: o.revisado>0 ? totalDefectuoso/o.revisado*100 : 0,
       defectos: Object.entries(o.defectos).map(([nombre,cant])=>({nombre,cant,pct:o.revisado>0?cant/o.revisado*100:0})).sort((a,b)=>b.cant-a.cant)
@@ -679,7 +796,7 @@ function renderTablaPrincipal(){
   const tbody = document.getElementById('tabla-ot');
   const tarjetas = document.getElementById('ot-cards');
   if(!filas.length){
-    tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted);text-align:center;">Sin datos para estos filtros.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);text-align:center;">Sin datos para estos filtros.</td></tr>';
     tarjetas.innerHTML = '<p class="hint">Sin datos para estos filtros.</p>';
     return;
   }
@@ -688,6 +805,7 @@ function renderTablaPrincipal(){
     ? f.defectos.map(d=>`${esc(d.nombre)} — ${fmt(d.cant)} (${pct(d.pct)})`).join('<br>')
     : '<span style="color:var(--muted);">Sin defectos</span>';
   const clase = f => f.pct>=10?'red':f.pct>=3?'yellow':'green';
+  filas.forEach((f,i)=>{ f._clave = 'ot'+i; FOTOS_POR_OT[f._clave] = { fotos: f.fotos||[], titulo: `${f.ot} · ${f.cliente}` }; });
 
   tbody.innerHTML = filas.map(f=>`<tr>
       <td><strong>${esc(f.ot)||'—'}</strong></td>
@@ -697,6 +815,7 @@ function renderTablaPrincipal(){
       <td style="font-size:12px;line-height:1.6;">${defectosHtml(f)}</td>
       <td>${fmt(f.defectuoso)}</td>
       <td><span class="pill ${clase(f)}">${pct(f.pct)}</span></td>
+      <td style="min-width:130px;">${miniaturasHtml(f.fotos||[], f._clave, 3)}</td>
     </tr>`).join('');
 
   // Versión en tarjetas para celular (la tabla de 7 columnas no cabe en 390 px)
@@ -714,6 +833,7 @@ function renderTablaPrincipal(){
         <span>Inspeccionado: <b>${fmt(f.revisado)}</b></span>
         <span>Defectuoso: <b>${fmt(f.defectuoso)}</b></span>
       </div>
+      ${(f.fotos&&f.fotos.length) ? miniaturasHtml(f.fotos, f._clave, 4) : ''}
     </div>`).join('');
 }
 
