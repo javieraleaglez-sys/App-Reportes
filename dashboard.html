@@ -258,6 +258,12 @@
     .hcards{display:flex;}
   }
   @supports (-webkit-touch-callout: none){ .hist-filtros select,.hist-filtros input{font-size:16px;} }
+  #rd{display:none;position:fixed;inset:0;z-index:9100;background:rgba(10,20,30,.55);align-items:center;justify-content:center;padding:20px;}
+  #rd.abierto{display:flex;}
+  .rd-box{background:var(--bg);width:100%;max-width:1200px;max-height:92vh;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+  .rd-body{overflow:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 22px;}
+  .rd-nota{background:#FFF6D6;border:1px solid #F0DC9A;color:#6B5310;border-radius:10px;padding:10px 14px;font-size:12.5px;line-height:1.5;margin-bottom:14px;}
+  @media (max-width:640px){ #rd{padding:0;} .rd-box{max-height:none;height:100%;border-radius:0;} .rd-body{padding:12px;} }
   .t-controles{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;}
   .t-controles .f{display:flex;flex-direction:column;gap:4px;}
   .t-controles .lbl{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
@@ -284,6 +290,7 @@
     <span class="estado"><span id="dot"></span> <span id="estado-texto">Cargando...</span></span>
     <button type="button" onclick="cargarTodo()">🔄 Actualizar</button>
     <button type="button" onclick="abrirHistorico()">📜 Histórico</button>
+    <button type="button" onclick="abrirReporteDiario()">📄 Reporte diario</button>
   </div>
 </header>
 <div class="wrap" style="padding-bottom:0;">
@@ -2032,6 +2039,195 @@ async function exportarHistoricoExcel(){
     btn.innerHTML = orig; btn.disabled = !H.filas.length;
   }
 }
+
+// ══════════════════════════════════════════════════════════════════════
+// REPORTE DIARIO DE AVANCE REAL CONTRA PROGRAMADO (formato Softys)
+// Una fila por lote (reporte) revisado en cada turno. Se genera al momento
+// con los datos de la base: por turno, por día o consolidado de las 08:00.
+// Lo que la app aún no captura (Origen, Ubicación final, Liberado por
+// Calidad Softys) sale en blanco, resaltado, para completarlo a mano.
+// ══════════════════════════════════════════════════════════════════════
+const RD_TURNOS = { T1:{txt:'1er', rango:'07–15 h'}, T2:{txt:'2do', rango:'15–22 h'}, T3:{txt:'3er', rango:'22–07 h'} };
+const RD_COLUMNAS = ['Fecha','Turno','Revisor Flexigrip','Origen (inventario / llegada)','Ítem Softys','Descripción','Lote / OT',
+  'Piezas revisadas','Piezas conformes','Piezas rechazadas','% rechazo','Defecto principal','Ubicación final','Liberado por Calidad Softys (nombre)','Observaciones'];
+
+function abrirReporteDiario(){
+  if(!REPORTES.length){ alert('Todavía no hay datos cargados. Toca 🔄 Actualizar e intenta de nuevo.'); return; }
+  const todas = construirFilasHistorico().filter(f=>f.fh && f.fechaTurno);
+  const clientes = [...new Set(todas.map(f=>f.cliente).filter(Boolean))].sort();
+  const sel = document.getElementById('rd-cliente');
+  sel.innerHTML = clientes.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  const softys = clientes.find(c=>/softys/i.test(c));
+  sel.value = softys || document.getElementById('f-cliente').value || clientes[0] || '';
+  // Por omisión: el último turno con reportes de ese cliente
+  const delCli = todas.filter(f=>f.cliente===sel.value).sort((a,b)=>b.fh-a.fh);
+  const ult = delCli[0] || todas.sort((a,b)=>b.fh-a.fh)[0];
+  if(ult){ document.getElementById('rd-fecha').value = claveDia(ult.fechaTurno); document.getElementById('rd-turno').value = ult.turno; }
+  document.getElementById('rd-modo').value = 'turno';
+  document.getElementById('rd').classList.add('abierto');
+  document.body.style.overflow = 'hidden';
+  renderReporteDiario();
+}
+function cerrarReporteDiario(){
+  document.getElementById('rd').classList.remove('abierto');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && document.getElementById('rd').classList.contains('abierto')) cerrarReporteDiario(); });
+
+// Filas del reporte según fecha / turno / modalidad / cliente
+function filasReporteDiario(){
+  const cli = document.getElementById('rd-cliente').value;
+  const fecha = document.getElementById('rd-fecha').value;   // YYYY-MM-DD
+  const modo = document.getElementById('rd-modo').value;     // turno | dia | consolidado
+  const turno = document.getElementById('rd-turno').value;
+  let etiqueta = '';
+  let filas = construirFilasHistorico().filter(f=>f.fh && f.fechaTurno && (!cli || f.cliente===cli));
+  if(!fecha) return { filas:[], etiqueta:'Elige una fecha', cli, fecha, modo, turno };
+  const [y,m,d] = fecha.split('-').map(Number);
+  const fTxt = `${dd2(d)}/${dd2(m)}/${y}`;
+  if(modo==='turno'){
+    filas = filas.filter(f=>claveDia(f.fechaTurno)===fecha && f.turno===turno);
+    etiqueta = `Turno ${RD_TURNOS[turno].txt} (${RD_TURNOS[turno].rango}) del ${fTxt}`;
+  } else if(modo==='dia'){
+    filas = filas.filter(f=>claveDia(f.fechaTurno)===fecha);
+    etiqueta = `Día ${fTxt} (turnos 1º, 2º y 3º)`;
+  } else {
+    const fin = new Date(y, m-1, d, 8, 0, 0), ini = new Date(fin.getTime() - 24*3600*1000);
+    filas = filas.filter(f=>f.fh>=ini && f.fh<fin);
+    etiqueta = `Consolidado de las 08:00 del ${fTxt} (de ${dd2(ini.getDate())}/${dd2(ini.getMonth()+1)} 08:00 a ${fTxt} 08:00)`;
+  }
+  filas.sort((a,b)=> (a.fechaTurno-b.fechaTurno) || (Object.keys(RD_TURNOS).indexOf(a.turno)-Object.keys(RD_TURNOS).indexOf(b.turno)) || (a.fh-b.fh));
+  return { filas, etiqueta, cli, fecha, modo, turno };
+}
+// Una fila del formato por cada reporte (lote)
+function filaSoftys(f){
+  const top = f.hallazgos.slice().sort((a,b)=>b.hallada-a.hallada);
+  const principal = top.length ? top[0].nombre : 'Sin defectos';
+  const otros = top.slice(1).filter(h=>h.hallada>0).map(h=>`${h.nombre} (${h.hallada})`);
+  const seg = top.reduce((s,h)=>s+h.segregada,0), rea = top.reduce((s,h)=>s+h.reacondicionada,0);
+  const notas = [];
+  if(f.observaciones) notas.push(String(f.observaciones).trim());
+  if(otros.length) notas.push('Otros defectos: ' + otros.join(', '));
+  if(seg||rea) notas.push(`Segregadas ${seg} · Reacondicionadas ${rea}`);
+  return {
+    fechaTurno:f.fechaTurno, turno:RD_TURNOS[f.turno] ? RD_TURNOS[f.turno].txt : f.turno, revisor:String(f.personal||'').trim(),
+    item:String(f.item||''), descripcion:String(f.producto||''), lote:String(f.ot||''),
+    revisadas:f.revisadas, conformes:f.liberadas, rechazadas:f.rechazadas,
+    defecto: top.length && (principal!=='Sin defectos') ? principal : 'Sin defectos', observaciones:notas.join(' · '), turnoKey:f.turno
+  };
+}
+function renderReporteDiario(){
+  const modo = document.getElementById('rd-modo').value;
+  document.getElementById('rd-turno-f').style.display = modo==='turno' ? '' : 'none';
+  const R = filasReporteDiario();
+  const filas = R.filas.map(filaSoftys);
+  const rev = filas.reduce((s,r)=>s+r.revisadas,0), con = filas.reduce((s,r)=>s+r.conformes,0), rec = filas.reduce((s,r)=>s+r.rechazadas,0);
+  document.getElementById('rd-sub').textContent = R.etiqueta;
+  document.getElementById('rd-kpis').innerHTML = [
+    ['Lotes revisados', fmt(filas.length), R.cli||'Todos los clientes'], ['Piezas revisadas', fmt(rev), ''],
+    ['Piezas conformes', fmt(con), ''], ['Piezas rechazadas', fmt(rec), ''], ['% rechazo', rev?pctF(rec/rev):'0.0%', '']
+  ].map(([l,v,s])=>`<div class="hk"><div class="l">${l}</div><div class="v ${l==='% rechazo'&&rev&&rec/rev>=0.1?'bad':''}">${v}</div><div class="s">${esc(s)}</div></div>`).join('');
+  document.getElementById('rd-excel').disabled = !filas.length;
+  document.querySelector('#tabla-rd tbody').innerHTML = filas.length ? filas.map(r=>`<tr>
+    <td style="white-space:nowrap;">${etiquetaPeriodo(claveDia(r.fechaTurno),'dia',true)}</td><td>${esc(r.turno)}</td><td class="txt">${esc(r.revisor)}</td>
+    <td>${esc(r.item)}</td><td class="txt">${esc(r.descripcion)}</td><td style="white-space:nowrap;"><b>${esc(r.lote)}</b></td>
+    <td class="n">${fmt(r.revisadas)}</td><td class="n">${fmt(r.conformes)}</td><td class="n">${fmt(r.rechazadas)}</td>
+    <td class="n">${r.revisadas?pctF(r.rechazadas/r.revisadas):'0.0%'}</td><td>${esc(r.defecto)}</td><td class="txt">${esc(r.observaciones)}</td></tr>`).join('')
+    : '<tr><td colspan="12" class="hist-vacio">No hay reportes para esta selección.</td></tr>';
+}
+
+async function descargarReporteDiario(){
+  const R = filasReporteDiario();
+  if(!R.filas.length) return;
+  const btn = document.getElementById('rd-excel'), orig = btn.innerHTML;
+  btn.disabled = true; btn.textContent = '⏳ Generando...';
+  try{
+    await cargarLibreriaExcel();
+    const filas = R.filas.map(filaSoftys);
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'Flexigrip · Soporte Técnico'; wb.created = new Date();
+    const ws = wb.addWorksheet('Reporte diario', { properties:{ tabColor:{argb:XL.azul} } });
+    ws.columns = RD_COLUMNAS.map(()=>({ width:12 }));
+    xlTitulo(ws, 'Reporte diario de avance real contra programado',
+      `Una fila por lote revisado en cada turno  ·  ${R.etiqueta}  ·  ${R.cli||'Todos los clientes'}  ·  Generado ${new Date().toLocaleString('es-MX')}  ·  Las columnas en amarillo (Origen, Ubicación final, Liberado por Calidad Softys) no se capturan en la app: complétalas antes de enviar.`, RD_COLUMNAS.length);
+    const utc = d => new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const cols = [
+      {t:RD_COLUMNAS[0],w:12,fmt:'dd-mmm-yy'},{t:RD_COLUMNAS[1],w:8},{t:RD_COLUMNAS[2],w:22,wrap:1},{t:RD_COLUMNAS[3],w:16},{t:RD_COLUMNAS[4],w:13},
+      {t:RD_COLUMNAS[5],w:36,wrap:1},{t:RD_COLUMNAS[6],w:14},{t:RD_COLUMNAS[7],n:1,w:11,fmt:'#,##0'},{t:RD_COLUMNAS[8],n:1,w:11,fmt:'#,##0'},
+      {t:RD_COLUMNAS[9],n:1,w:11,fmt:'#,##0'},{t:RD_COLUMNAS[10],n:1,w:10,fmt:'0.0%'},{t:RD_COLUMNAS[11],w:26,wrap:1},{t:RD_COLUMNAS[12],w:20},
+      {t:RD_COLUMNAS[13],w:24},{t:RD_COLUMNAS[14],w:44,wrap:1}
+    ];
+    const ini = 5;
+    const datos = filas.map((r,i)=>{
+      const n = ini + i;
+      return [ utc(r.fechaTurno), r.turno, r.revisor, '', r.item, r.descripcion, r.lote, r.revisadas, r.conformes, r.rechazadas,
+        { formula:`IF(H${n}=0,0,J${n}/H${n})`, result: r.revisadas ? r.rechazadas/r.revisadas : 0 }, r.defecto, '', '', r.observaciones ];
+    });
+    xlTabla(ws, 4, cols, datos, { colorear:(row)=>{
+      [4,13,14].forEach(c=>{ row.getCell(c).fill = fill('FFFFF6D6'); });
+      row.getCell(11).font = { size:10, bold:true, color:{argb:XL.texto} };
+    }});
+    // Encabezados de las columnas por completar
+    [4,13,14].forEach(c=>{ const h = ws.getRow(4).getCell(c); h.fill = fill('FFB7791F'); });
+    // Fila de totales
+    const fin = ini + filas.length - 1, tr = fin + 1;
+    const rev = filas.reduce((s,r)=>s+r.revisadas,0), con = filas.reduce((s,r)=>s+r.conformes,0), rec = filas.reduce((s,r)=>s+r.rechazadas,0);
+    ws.getCell(tr,7).value = 'TOTAL';
+    [[8,`SUM(H${ini}:H${fin})`,rev],[9,`SUM(I${ini}:I${fin})`,con],[10,`SUM(J${ini}:J${fin})`,rec],[11,`IF(H${tr}=0,0,J${tr}/H${tr})`,rev?rec/rev:0]].forEach(([c,f,res])=>{
+      ws.getCell(tr,c).value = { formula:f, result:res }; ws.getCell(tr,c).numFmt = c===11 ? '0.0%' : '#,##0';
+    });
+    for(let c=1;c<=RD_COLUMNAS.length;c++){
+      const cel = ws.getCell(tr,c); cel.font = { bold:true, size:10.5, color:{argb:XL.azulOsc} }; cel.fill = fill(XL.claro);
+      cel.border = { top:{style:'medium',color:{argb:XL.azul}}, bottom:{style:'thin',color:{argb:XL.borde}} };
+      cel.alignment = { horizontal: c>=8 && c<=11 ? 'right' : 'left' };
+    }
+    xlPie(ws);
+
+    // Hoja de resumen (por turno, por ítem y defectos)
+    const wr = wb.addWorksheet('Resumen', { properties:{ tabColor:{argb:'FF1BAF7A'} } });
+    wr.columns = Array.from({length:7}, ()=>({ width:14 }));
+    xlTitulo(wr, 'Resumen del reporte', `${R.etiqueta}  ·  ${R.cli||'Todos los clientes'}`, 7);
+    let fr = 4;
+    const porTurno = {}, porItem = {}, porDef = {};
+    R.filas.forEach(f=>{
+      const t = (RD_TURNOS[f.turno]||{txt:f.turno}).txt; const dia = claveDia(f.fechaTurno);
+      const kt = dia+'|'+t; const o = porTurno[kt] = porTurno[kt] || { dia, t, lotes:0, rev:0, con:0, rec:0 };
+      o.lotes++; o.rev += f.revisadas; o.con += f.liberadas; o.rec += f.rechazadas;
+      const ki = f.item+'|'+f.producto; const p = porItem[ki] = porItem[ki] || { item:f.item, prod:f.producto, lotes:0, rev:0, con:0, rec:0 };
+      p.lotes++; p.rev += f.revisadas; p.con += f.liberadas; p.rec += f.rechazadas;
+      f.hallazgos.forEach(h=>{ porDef[h.nombre] = (porDef[h.nombre]||0) + h.hallada; });
+    });
+    xlSeccion(wr, fr, 'Por turno', 7); fr++;
+    xlTabla(wr, fr, [{t:'Fecha',w:12},{t:'Turno',w:10},{t:'Lotes',n:1,w:10,fmt:'#,##0'},{t:'Piezas revisadas',n:1,w:14,fmt:'#,##0'},{t:'Piezas conformes',n:1,w:14,fmt:'#,##0'},{t:'Piezas rechazadas',n:1,w:14,fmt:'#,##0'},{t:'% rechazo',n:1,w:12,fmt:'0.0%'}],
+      Object.values(porTurno).sort((a,b)=>a.dia<b.dia?-1:1).map(o=>[etiquetaPeriodo(o.dia,'dia',true), o.t, o.lotes, o.rev, o.con, o.rec, o.rev?o.rec/o.rev:0]));
+    fr += Object.keys(porTurno).length + 3;
+    xlSeccion(wr, fr, 'Por ítem y producto', 7); fr++;
+    const itemsArr = Object.values(porItem).sort((a,b)=>b.rev-a.rev);
+    xlTabla(wr, fr, [{t:'Ítem',w:12},{t:'Producto',w:34,wrap:1},{t:'Lotes',n:1,w:10,fmt:'#,##0'},{t:'Piezas revisadas',n:1,w:14,fmt:'#,##0'},{t:'Piezas conformes',n:1,w:14,fmt:'#,##0'},{t:'Piezas rechazadas',n:1,w:14,fmt:'#,##0'},{t:'% rechazo',n:1,w:12,fmt:'0.0%'}],
+      itemsArr.map(o=>[o.item, o.prod, o.lotes, o.rev, o.con, o.rec, o.rev?o.rec/o.rev:0]));
+    fr += itemsArr.length + 3;
+    xlSeccion(wr, fr, 'Defectos detectados (ocurrencias)', 7); fr++;
+    xlTabla(wr, fr, [{t:'Defecto',w:34,wrap:1},{t:'Cantidad',n:1,w:12,fmt:'#,##0'}], Object.entries(porDef).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,v]));
+    wr.views = [{ showGridLines:false }];
+    xlPie(wr);
+
+    const idLogo = wb.addImage({ base64: await placaLogo(), extension:'png' });
+    wb.worksheets.forEach(h=>{ if(h._ultimaColTitulo) xlLogo(wb, h, idLogo, h._ultimaColTitulo); });
+
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const cliTxt = (R.cli||'Todos').replace(/[^A-Za-z0-9]+/g,'_');
+    const sufijo = R.modo==='turno' ? (RD_TURNOS[R.turno].txt) : (R.modo==='dia' ? 'dia' : 'consolidado_0800');
+    const nombre = `Reporte_diario_${cliTxt}_${R.fecha}_${sufijo}.xlsx`;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nombre;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  }catch(err){
+    console.error(err);
+    alert('No se pudo generar el archivo de Excel. Revisa tu conexión a internet e intenta de nuevo.\n\n(' + err.message + ')');
+  }finally{
+    btn.innerHTML = orig; btn.disabled = false;
+  }
+}
 </script>
 
 <!-- ══ Ventana de Histórico ══ -->
@@ -2232,6 +2428,44 @@ async function exportarHistoricoExcel(){
             </tr></thead><tbody></tbody></table>
           </div>
           <div class="hcards" id="cards-reportes" style="padding:12px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ══ Reporte diario (formato Softys) ══ -->
+<div id="rd" role="dialog" aria-modal="true" aria-labelledby="rd-titulo" onclick="if(event.target===this)cerrarReporteDiario()">
+  <div class="rd-box">
+    <div class="hist-top">
+      <h2 id="rd-titulo">📄 Reporte diario de avance real contra programado<small id="rd-sub"></small></h2>
+      <div class="hist-acciones">
+        <button type="button" class="hist-btn excel" id="rd-excel" onclick="descargarReporteDiario()">⬇️ Descargar Excel</button>
+        <button type="button" class="hist-btn cerrar" onclick="cerrarReporteDiario()">✕ Cerrar</button>
+      </div>
+    </div>
+    <div class="hist-filtros">
+      <div class="f full"><label for="rd-cliente">Cliente</label><select id="rd-cliente" onchange="renderReporteDiario()"></select></div>
+      <div class="f"><label for="rd-modo">Reporte</label>
+        <select id="rd-modo" onchange="renderReporteDiario()">
+          <option value="turno">Cierre de un turno</option>
+          <option value="dia">Todo el día (3 turnos)</option>
+          <option value="consolidado">Consolidado de las 08:00</option>
+        </select></div>
+      <div class="f"><label for="rd-fecha">Fecha</label><input type="date" id="rd-fecha" onchange="renderReporteDiario()"></div>
+      <div class="f" id="rd-turno-f"><label for="rd-turno">Turno</label>
+        <select id="rd-turno" onchange="renderReporteDiario()">
+          <option value="T1">1er turno (07–15 h)</option><option value="T2">2do turno (15–22 h)</option><option value="T3">3er turno (22–07 h)</option>
+        </select></div>
+    </div>
+    <div class="rd-body">
+      <div class="hk-grid" id="rd-kpis" style="grid-template-columns:repeat(5,minmax(0,1fr));"></div>
+      <div class="rd-nota">📝 Una fila por lote revisado. <b>Origen</b>, <b>Ubicación final</b> y <b>Liberado por Calidad Softys</b> no se capturan en la app: salen en blanco (resaltadas en amarillo en el Excel) para completarlas antes de enviar. <b>Piezas conformes</b> = bolsas liberadas; <b>Defecto principal</b> = el de mayor cantidad; los demás defectos y las bolsas segregadas/reacondicionadas van en Observaciones.</div>
+      <div class="hist-card" style="padding:0;overflow:hidden;">
+        <div class="tabla-scroll-h">
+          <table class="tabla-h" id="tabla-rd"><thead><tr>
+            <th>Fecha</th><th>Turno</th><th>Revisor Flexigrip</th><th>Ítem Softys</th><th>Descripción</th><th>Lote / OT</th>
+            <th class="n">Piezas revisadas</th><th class="n">Piezas conformes</th><th class="n">Piezas rechazadas</th><th class="n">% rechazo</th><th>Defecto principal</th><th>Observaciones</th>
+          </tr></thead><tbody></tbody></table>
         </div>
       </div>
     </div>
