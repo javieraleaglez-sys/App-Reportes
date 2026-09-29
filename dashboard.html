@@ -60,6 +60,7 @@
 
   .insight{background:var(--accent);border:1px solid #C8DEF0;border-radius:10px;padding:14px 18px;font-size:13.5px;color:var(--text);margin-top:18px;line-height:1.55;}
   .insight b{color:var(--primary-dark);}
+  .insight .aviso-cuadre{display:block;margin-top:8px;padding:8px 12px;border-radius:8px;background:#FEF6E7;border:1px solid #F5D48A;color:#7A5410;}
 
   /* ---- grid de gráficas ---- */
   .grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;}
@@ -257,6 +258,12 @@
     .hcards{display:flex;}
   }
   @supports (-webkit-touch-callout: none){ .hist-filtros select,.hist-filtros input{font-size:16px;} }
+  .t-controles{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;}
+  .t-controles .f{display:flex;flex-direction:column;gap:4px;}
+  .t-controles .lbl{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  .grid-t2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:1000px){ .grid-t2{grid-template-columns:1fr;} }
+  @media (max-width:640px){ .t-controles .f{flex:1 1 100%;} .t-controles .seg{width:100%;} .t-controles .seg button{flex:1;} }
 </style>
 </head>
 <body>
@@ -326,14 +333,14 @@
         <div class="sub">bolsas revisadas</div>
       </div>
       <div class="kpi-card">
-        <div class="lbl">Total con defecto</div>
+        <div class="lbl">Defectos detectados</div>
         <div class="val" id="kpi-defectuoso">—</div>
-        <div class="sub">bolsas con algún defecto</div>
+        <div class="sub">ocurrencias (una bolsa puede tener varios)</div>
       </div>
       <div class="kpi-card">
-        <div class="lbl">% Defectuoso global</div>
+        <div class="lbl">Tasa de defectos global</div>
         <div class="val" id="kpi-pct-defecto">—</div>
-        <div class="sub">del total inspeccionado</div>
+        <div class="sub">defectos por cada 100 bolsas inspeccionadas</div>
       </div>
     </div>
     <div class="insight" id="insight-gerencial">Calculando resumen...</div>
@@ -343,12 +350,12 @@
     <div class="grid2">
       <div class="card">
         <h3>Pareto de defectos (todas las OT)</h3>
-        <p class="hint">Barras = bolsas halladas · Línea = % acumulado. Los pocos defectos a la izquierda explican la mayoría del problema.</p>
+        <p class="hint">Barras = defectos detectados · Línea = % acumulado. Los pocos defectos a la izquierda explican la mayoría del problema.</p>
         <div class="chart-box"><canvas id="chart-pareto"></canvas></div>
       </div>
       <div class="card">
-        <h3>% que representa cada defecto del total inspeccionado</h3>
-        <p class="hint">Mismo Pareto, pero normalizado: qué proporción de TODO lo que se revisó corresponde a cada tipo de defecto.</p>
+        <h3>Tasa de cada tipo de defecto (por cada 100 bolsas inspeccionadas)</h3>
+        <p class="hint">Mismo Pareto, pero normalizado: cuántos defectos de cada tipo aparecen por cada 100 bolsas revisadas.</p>
         <div class="chart-box"><canvas id="chart-pareto-pct"></canvas></div>
       </div>
     </div>
@@ -357,8 +364,8 @@
     <div class="section-title">Por cliente <div class="line"></div></div>
     <div class="grid2">
       <div class="card">
-        <h3>% defectuoso por cliente</h3>
-        <p class="hint">Del total inspeccionado por cliente, qué % resultó con algún defecto.</p>
+        <h3>Tasa de defectos por cliente</h3>
+        <p class="hint">Defectos detectados por cada 100 bolsas inspeccionadas de cada cliente.</p>
         <div class="chart-box" id="box-clientes"><canvas id="chart-clientes"></canvas></div>
       </div>
       <div class="card">
@@ -371,13 +378,13 @@
     <!-- ============ TABLA PRINCIPAL: DEFECTOS POR OT ============ -->
     <div class="section-title">Defectos por OT — qué se detectó y qué representa <div class="line"></div></div>
     <div class="card">
-      <h3>Cada OT, con sus defectos y el % que representan sobre lo inspeccionado</h3>
-      <p class="hint">Ordenado de mayor a menor % defectuoso. Toca el encabezado de una columna para reordenar.</p>
+      <h3>Cada OT, con sus defectos y la tasa que representan sobre lo inspeccionado</h3>
+      <p class="hint">Ordenado de mayor a menor tasa de defectos (defectos por cada 100 bolsas). Toca el encabezado de una columna para reordenar.</p>
       <div class="orden-movil">
         <label for="orden-movil-sel">Ordenar por:</label>
         <select id="orden-movil-sel">
-          <option value="pct">% defectuoso</option>
-          <option value="defectuoso">Total defectuoso</option>
+          <option value="pct">Tasa de defectos</option>
+          <option value="defectuoso">Total de defectos</option>
           <option value="revisado">Inspeccionado</option>
           <option value="ot">OT</option>
           <option value="cliente">Cliente</option>
@@ -392,8 +399,8 @@
             <th data-key="item" style="cursor:pointer;">Ítem ↕</th>
             <th data-key="revisado" style="cursor:pointer;">Inspeccionado ↕</th>
             <th>Defectos detectados</th>
-            <th data-key="defectuoso" style="cursor:pointer;">Total defectuoso ↕</th>
-            <th data-key="pct" style="cursor:pointer;">% de lo inspeccionado ↕</th>
+            <th data-key="defectuoso" style="cursor:pointer;">Total de defectos ↕</th>
+            <th data-key="pct" style="cursor:pointer;">Tasa (defectos por 100 bolsas) ↕</th>
             <th>Evidencias</th>
           </tr>
         </thead>
@@ -424,6 +431,14 @@
 // ══════════════════════════════════════════════════════════════════════
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwuGDWR7XrwZe7b8j22ioYC7Arvs2KYdD9ZcUisEIFBJw1Vj23bk5mXCEmf4vsaah83bA/exec';
 
+// CRITERIO DE MEDICIÓN (decisión del 28/09/2026)
+//  · Una misma bolsa puede tener 2 o más defectos: cada defecto registrado se
+//    cuenta como una ocurrencia (para Pareto, tasas y estadísticos).
+//  · "Tasa de defectos" = defectos ÷ bolsas inspeccionadas × 100. Por eso puede
+//    superar 100 % cuando hay varios defectos por bolsa.
+//  · Liberadas + rechazadas debe ser igual a lo inspeccionado; los reportes
+//    donde no cuadra se señalan para corregirlos.
+
 let REPORTES = [];   // crudo, tal como llega de la Sheet
 let HALLAZGOS = [];  // crudo, tal como llega de la Sheet
 let charts = {};     // instancias de Chart.js activas, para poder destruirlas al refiltrar
@@ -435,6 +450,12 @@ function num(v){ const n = Number(v); return isNaN(n) ? 0 : n; }
 function fmt(n){ return Math.round(n).toLocaleString('es-MX'); }
 function pct(n){ return n.toLocaleString('es-MX',{minimumFractionDigits:1,maximumFractionDigits:1}) + '%'; }
 function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// Nombre de defecto normalizado: así "sello debil" y "SELLO DEBIL" cuentan como uno solo
+function normDefecto(t){ return String(t||'').trim().toUpperCase(); }
+// ¿Cuadra el reporte? liberadas + rechazadas = inspeccionadas
+function reporteCuadra(r){
+  return num(r['Cantidad de bolsas liberadas']) + num(r['Cantidad de bolsas rechazadas']) === num(r['Cantidad total de bolsas recibidas']);
+}
 
 // ── Evidencias: fotos guardadas en Drive ────────────────────────────────
 // Busca en cada reporte cualquier columna cuyo nombre tenga "evidencia",
@@ -520,8 +541,7 @@ document.addEventListener('keydown', e=>{
 
 // Convierte la fecha de la Sheet a un Date (día local, sin hora).
 // Acepta "17/7/2026 21:01:14" o ISO "2026-07-17T08:58:22.000Z" (celda con
-// formato de fecha). En el caso ISO se usa la hora LOCAL de México: antes se
-// tomaba la fecha UTC y los reportes de la noche caían en el día siguiente.
+// formato de fecha). En el caso ISO se usa la hora LOCAL de México.
 function parseFecha(s){
   if(!s) return null;
   const txt = String(s);
@@ -586,31 +606,14 @@ async function diagnosticar(){
       else if(camposFoto.length){ log('   Ejemplo del valor guardado: ' + String(data.reportes[0][camposFoto[0]]).slice(0,200)); }
       log('\n2) Primer reporte recibido (para revisar que los campos vengan bien):');
       log(JSON.stringify(data.reportes[0], null, 2));
+      const noCuadran = data.reportes.filter(reporteCuadra).length;
+      log('\n3) Reportes que cuadran (liberadas + rechazadas = revisadas): ' + noCuadran + ' de ' + data.reportes.length);
     }
     if(!data.reportes.length){
       log('\n⚠️ El servidor respondió bien pero no hay NINGÚN reporte con ID asignado.');
       log('   Si migraste datos viejos, confirma que corriste "asignarIdAReportesExistentes".');
     }
-    log('\n3) Estado de Chart.js en esta página: ' + (typeof Chart !== 'undefined' ? '✅ cargado correctamente' : '❌ NO se cargó (revisa tu conexión a internet o un bloqueador de contenido que pueda estar filtrando cdnjs.cloudflare.com)'));
-
-    if(typeof Chart !== 'undefined'){
-      log('\n4) Probando dibujar una gráfica de prueba con tus datos reales...');
-      try{
-        const prueba = agruparPorDefecto(data.hallazgos || []).slice(0,3);
-        const contPrueba = document.createElement('canvas');
-        contPrueba.width = 300; contPrueba.height = 150;
-        const chartPrueba = new Chart(contPrueba, {
-          type:'bar',
-          data:{ labels: prueba.map(d=>d.nombre), datasets:[{type:'bar',label:'prueba',data:prueba.map(d=>d.hallada),yAxisID:'y'},{type:'line',label:'prueba2',data:prueba.map(()=>50),yAxisID:'y1'}] },
-          options:{ animation:false, scales:{ y:{beginAtZero:true}, y1:{beginAtZero:true,position:'right'} } }
-        });
-        chartPrueba.destroy();
-        log('✅ La gráfica de prueba se dibujó sin errores.');
-      }catch(errChart){
-        log('❌ Falló al dibujar la gráfica de prueba: ' + errChart.message);
-        log('   Este es el error real que está bloqueando las gráficas. Copia este mensaje completo.');
-      }
-    }
+    log('\n4) Estado de Chart.js en esta página: ' + (typeof Chart !== 'undefined' ? '✅ cargado correctamente' : '❌ NO se cargó (revisa tu conexión a internet o un bloqueador de contenido que pueda estar filtrando cdnjs.cloudflare.com)'));
   }catch(err){
     log('\n❌ Falló la conexión: ' + err.message);
   }
@@ -710,12 +713,14 @@ function calcularYRenderizar(reportes, hallazgos){
   const totalRevisadas = reportes.reduce((s,r)=>s+num(r['Cantidad total de bolsas recibidas']),0);
   const totalLiberadas = reportes.reduce((s,r)=>s+num(r['Cantidad de bolsas liberadas']),0);
   const totalRechazadas = reportes.reduce((s,r)=>s+num(r['Cantidad de bolsas rechazadas']),0);
-  const totalHallada = hallazgos.reduce((s,h)=>{
-    if(String(h['Defecto']||'').trim().toUpperCase()==='SIN DEFECTOS') return s;
+  // Defectos detectados = suma de las cantidades halladas (ocurrencias; una bolsa puede tener varios)
+  const totalDefectos = hallazgos.reduce((s,h)=>{
+    if(normDefecto(h['Defecto'])==='SIN DEFECTOS') return s;
     return s+num(h['Cantidad hallada']);
   },0);
 
-  const pctDefectoGlobal = totalRevisadas>0 ? (totalHallada/totalRevisadas*100) : 0;
+  const tasaGlobal = totalRevisadas>0 ? (totalDefectos/totalRevisadas*100) : 0;
+  const noCuadran = reportes.filter(r=>!reporteCuadra(r)).length;
 
   // ---- Agrupar por OT (Cliente+OT como llave, por si dos clientes comparten folio) ----
   const porOT = agruparPorOT(reportes, hallazgos);
@@ -724,9 +729,9 @@ function calcularYRenderizar(reportes, hallazgos){
   document.getElementById('kpi-ot-n').textContent = fmt(porOT.length);
   document.getElementById('kpi-reportes-n').textContent = reportes.length + ' reporte(s)';
   document.getElementById('kpi-revisadas').textContent = fmt(totalRevisadas);
-  document.getElementById('kpi-defectuoso').textContent = fmt(totalHallada);
-  document.getElementById('kpi-pct-defecto').textContent = pct(pctDefectoGlobal);
-  document.getElementById('kpi-pct-defecto').className = 'val ' + (pctDefectoGlobal<=3?'good':pctDefectoGlobal>=10?'bad':'');
+  document.getElementById('kpi-defectuoso').textContent = fmt(totalDefectos);
+  document.getElementById('kpi-pct-defecto').textContent = pct(tasaGlobal);
+  document.getElementById('kpi-pct-defecto').className = 'val ' + (tasaGlobal<=3?'good':tasaGlobal>=10?'bad':'');
 
   // ---- Resumen ejecutivo ----
   const paretoDefectos = agruparPorDefecto(hallazgos);
@@ -734,9 +739,11 @@ function calcularYRenderizar(reportes, hallazgos){
   const peorOT = porOT.slice().sort((a,b)=>b.pct-a.pct)[0];
   document.getElementById('insight-gerencial').innerHTML =
     `<b>Resumen:</b> se analizaron <b>${porOT.length}</b> OT (${reportes.length} reporte(s)), con ${fmt(totalRevisadas)} bolsas inspeccionadas en total. ` +
-    `<b>${fmt(totalHallada)}</b> bolsas presentaron algún defecto (${pct(pctDefectoGlobal)} del total).` +
-    (topDefecto ? ` El defecto más frecuente es <b>"${esc(topDefecto.nombre)}"</b>, con ${fmt(topDefecto.hallada)} bolsas afectadas.` : '') +
-    (peorOT && peorOT.pct>0 ? ` La OT con mayor % defectuoso es <b>${esc(peorOT.ot)}</b> (${pct(peorOT.pct)} de lo inspeccionado en esa orden).` : '');
+    `Se detectaron <b>${fmt(totalDefectos)}</b> defectos (una misma bolsa puede tener varios), es decir <b>${pct(tasaGlobal)}</b> defectos por cada 100 bolsas revisadas. ` +
+    `Se liberaron ${fmt(totalLiberadas)} y se rechazaron ${fmt(totalRechazadas)} bolsas.` +
+    (topDefecto ? ` El defecto más frecuente es <b>"${esc(topDefecto.nombre)}"</b>, con ${fmt(topDefecto.hallada)} ocurrencias.` : '') +
+    (peorOT && peorOT.pct>0 ? ` La OT con mayor tasa de defectos es <b>${esc(peorOT.ot)}</b> (${pct(peorOT.pct)} de lo inspeccionado en esa orden).` : '') +
+    (noCuadran>0 ? `<span class="aviso-cuadre">⚠️ <b>${noCuadran}</b> reporte(s) no cuadran: liberadas + rechazadas es distinto de las bolsas revisadas. Corrígelos desde <i>Ver historial completo</i> en la app (modo administrador).</span>` : '');
 
   // ---- Tabla principal por OT ----
   tablaOTData = porOT;
@@ -757,7 +764,7 @@ function calcularYRenderizar(reportes, hallazgos){
 }
 
 // Agrupa reportes + hallazgos por OT (sumando si una OT aparece en más de
-// un reporte), con el desglose de cada defecto y qué % representa sobre
+// un reporte), con el desglose de cada defecto y qué tasa representa sobre
 // el total inspeccionado de esa OT.
 function agruparPorOT(reportes, hallazgos){
   const mapa = {};
@@ -775,17 +782,17 @@ function agruparPorOT(reportes, hallazgos){
     // Se busca por ID_Reporte (más confiable); si no, por Cliente+OT
     const key = idAKey[h['ID_Reporte']] || ((h['Cliente']||'') + '|' + (h['Número de OT']||''));
     if(!mapa[key]) return; // hallazgo de un reporte fuera del filtro actual
-    const nombre = String(h['Defecto']||'').trim();
-    if(!nombre || nombre.toUpperCase()==='SIN DEFECTOS') return;
+    const nombre = normDefecto(h['Defecto']);
+    if(!nombre || nombre==='SIN DEFECTOS') return;
     if(!mapa[key].defectos[nombre]) mapa[key].defectos[nombre] = 0;
     mapa[key].defectos[nombre] += num(h['Cantidad hallada']);
   });
   return Object.values(mapa).map(o=>{
-    const totalDefectuoso = Object.values(o.defectos).reduce((s,v)=>s+v,0);
+    const totalDefectos = Object.values(o.defectos).reduce((s,v)=>s+v,0);
     return {
       ot:o.ot, cliente:o.cliente, item:o.item, revisado:o.revisado, liberadas:o.liberadas, rechazadas:o.rechazadas, fotos:o.fotos,
-      defectuoso: totalDefectuoso,
-      pct: o.revisado>0 ? totalDefectuoso/o.revisado*100 : 0,
+      defectuoso: totalDefectos, // = total de defectos (ocurrencias)
+      pct: o.revisado>0 ? totalDefectos/o.revisado*100 : 0,
       defectos: Object.entries(o.defectos).map(([nombre,cant])=>({nombre,cant,pct:o.revisado>0?cant/o.revisado*100:0})).sort((a,b)=>b.cant-a.cant)
     };
   });
@@ -794,8 +801,8 @@ function agruparPorOT(reportes, hallazgos){
 function agruparPorDefecto(hallazgos){
   const mapa = {};
   hallazgos.forEach(h=>{
-    const nombre = String(h['Defecto']||'(sin nombre)').trim();
-    if(nombre.toUpperCase()==='SIN DEFECTOS') return;
+    const nombre = normDefecto(h['Defecto']) || '(SIN NOMBRE)';
+    if(nombre==='SIN DEFECTOS') return;
     if(!mapa[nombre]) mapa[nombre] = {nombre, hallada:0, segregada:0, reacondicionada:0};
     mapa[nombre].hallada += num(h['Cantidad hallada']);
     mapa[nombre].segregada += num(h['Cantidad segregada']);
@@ -816,7 +823,7 @@ function agruparPorCliente(reportes, hallazgos){
   hallazgos.forEach(h=>{
     const nombreCliente = idACliente[h['ID_Reporte']] || h['Cliente'];
     if(!nombreCliente || !mapa[nombreCliente]) return;
-    if(String(h['Defecto']||'').trim().toUpperCase()==='SIN DEFECTOS') return;
+    if(normDefecto(h['Defecto'])==='SIN DEFECTOS') return;
     mapa[nombreCliente].defectuoso += num(h['Cantidad hallada']);
   });
   return Object.values(mapa).map(c=>({...c, tasa: c.revisadas>0 ? c.defectuoso/c.revisadas*100 : 0}));
@@ -861,20 +868,20 @@ function renderPareto(datos){
     data: {
       labels: top.map(d=>d.nombre),
       datasets: [
-        { type:'bar', label:'Bolsas halladas', data: top.map(d=>d.hallada), backgroundColor:'#005B96', borderRadius:5, yAxisID:'y' },
+        { type:'bar', label:'Defectos detectados', data: top.map(d=>d.hallada), backgroundColor:'#005B96', borderRadius:5, yAxisID:'y' },
         { type:'line', label:'% acumulado', data: acumulado, borderColor:'#eda100', backgroundColor:'#eda100', yAxisID:'y1', tension:0.25, pointRadius:4 }
       ]
     },
     options: {
       responsive:true, maintainAspectRatio:false,
       scales:{
-        y:{ beginAtZero:true, title:{display:!ES_MOVIL(),text:'Bolsas'} },
+        y:{ beginAtZero:true, title:{display:!ES_MOVIL(),text:'Defectos'} },
         y1:{ beginAtZero:true, max:100, position:'right', grid:{drawOnChartArea:false}, title:{display:!ES_MOVIL(),text:'% acumulado'}, ticks:{callback:v=>v+'%'} },
         x:{ ticks: ticksX(top.length) }
       },
       plugins:{
         legend:{ position:'bottom', labels:{boxWidth:12,font:{size:11}} },
-        tooltip:{ callbacks:{ label:ctx=> ctx.dataset.yAxisID==='y1' ? `% acumulado: ${pct(ctx.parsed.y)}` : `Bolsas halladas: ${fmt(ctx.parsed.y)}` } }
+        tooltip:{ callbacks:{ label:ctx=> ctx.dataset.yAxisID==='y1' ? `% acumulado: ${pct(ctx.parsed.y)}` : `Defectos detectados: ${fmt(ctx.parsed.y)}` } }
       }
     }
   });
@@ -889,15 +896,15 @@ function renderClientes(porCliente){
     type:'bar',
     data:{
       labels: ordenado.map(c=>c.nombre),
-      datasets:[{ label:'% Defectuoso', data: ordenado.map(c=>Number(c.tasa.toFixed(2))), backgroundColor: ordenado.map(c=>c.tasa>=10?'#C0392B':c.tasa>=3?'#eda100':'#1D6A3A'), borderRadius:5 }]
+      datasets:[{ label:'Tasa de defectos', data: ordenado.map(c=>Number(c.tasa.toFixed(2))), backgroundColor: ordenado.map(c=>c.tasa>=10?'#C0392B':c.tasa>=3?'#eda100':'#1D6A3A'), borderRadius:5 }]
     },
     options:{
       indexAxis:'y', responsive:true, maintainAspectRatio:false,
       scales:{
-        x:{ beginAtZero:true, title:{display:!ES_MOVIL(),text:'% Defectuoso'}, ticks:{callback:v=>v+'%'} },
+        x:{ beginAtZero:true, title:{display:!ES_MOVIL(),text:'Defectos por cada 100 bolsas'}, ticks:{callback:v=>v+'%'} },
         y:{ ticks:{ font:{size:ES_MOVIL()?10.5:12}, callback:function(v){ return ES_MOVIL() ? recortar(this.getLabelForValue(v), 16) : this.getLabelForValue(v); } } }
       },
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>`% defectuoso: ${pct(ctx.parsed.x)}` } } }
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>`Tasa de defectos: ${pct(ctx.parsed.x)}` } } }
     }
   });
 }
@@ -951,7 +958,7 @@ function renderTablaPrincipal(){
       <td style="min-width:130px;">${miniaturasHtml(f.fotos||[], f._clave, 3)}</td>
     </tr>`).join('');
 
-  // Versión en tarjetas para celular (la tabla de 7 columnas no cabe en 390 px)
+  // Versión en tarjetas para celular (la tabla de 8 columnas no cabe en 390 px)
   tarjetas.innerHTML = filas.map(f=>`
     <div class="ot-card">
       <div class="ot-card-top">
@@ -966,7 +973,7 @@ function renderTablaPrincipal(){
         : '<span style="color:var(--muted);">Sin defectos</span>'}</div>
       <div class="ot-card-nums">
         <span>Inspeccionado: <b>${fmt(f.revisado)}</b></span>
-        <span>Defectuoso: <b>${fmt(f.defectuoso)}</b></span>
+        <span>Defectos: <b>${fmt(f.defectuoso)}</b></span>
       </div>
       ${(f.fotos&&f.fotos.length) ? miniaturasHtml(f.fotos, f._clave, 4) : ''}
     </div>`).join('');
@@ -979,12 +986,12 @@ function renderParetoPct(datos, totalRevisadas){
     type:'bar',
     data:{
       labels: top.map(d=>d.nombre),
-      datasets:[{ label:'% del total inspeccionado', data: top.map(d=> totalRevisadas>0 ? Number((d.hallada/totalRevisadas*100).toFixed(2)) : 0), backgroundColor:'#4a3aa7', borderRadius:5 }]
+      datasets:[{ label:'Defectos por cada 100 bolsas inspeccionadas', data: top.map(d=> totalRevisadas>0 ? Number((d.hallada/totalRevisadas*100).toFixed(2)) : 0), backgroundColor:'#4a3aa7', borderRadius:5 }]
     },
     options:{
       responsive:true, maintainAspectRatio:false,
-      scales:{ y:{ beginAtZero:true, title:{display:!ES_MOVIL(),text:'% del total inspeccionado'}, ticks:{callback:v=>v+'%'} }, x:{ ticks: ticksX(top.length) } },
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>`${pct(ctx.parsed.y)} del total inspeccionado` } } }
+      scales:{ y:{ beginAtZero:true, title:{display:!ES_MOVIL(),text:'Defectos por cada 100 bolsas'}, ticks:{callback:v=>v+'%'} }, x:{ ticks: ticksX(top.length) } },
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>`${pct(ctx.parsed.y)} (defectos por cada 100 bolsas)` } } }
     }
   });
 }
@@ -1017,15 +1024,20 @@ setInterval(()=>{ if(document.visibilityState==='visible') cargarTodo(); }, 5*60
 // iPhone: al volver a la app desde otra (o desbloquear), refresca los datos
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') cargarTodo(); });
 
+
 // ══════════════════════════════════════════════════════════════════════
 // HISTÓRICO DE INSPECCIÓN
-//  · Por periodo (día / semana / mes): volumen, % defectivo con carta p′ de
-//    Laney y detalle con el defecto principal.
+//  · Por periodo (día / semana / mes): volumen, TASA DE DEFECTOS con carta u′
+//    de Laney y detalle con el defecto principal.
 //  · Por turno: bolsas por turno T1/T2/T3, mediana y atípicos (Tukey).
 //  · Reportes: la lista completa con sus defectos.
 //  "Exportar a Excel" descarga exactamente lo que está filtrado.
+//
+//  Criterio: los defectos se cuentan por ocurrencia (una bolsa puede tener
+//  varios), así que la métrica es "defectos por unidad" y la carta de control
+//  correcta es la carta u (no la p, que supone una sola falla por bolsa).
 // ══════════════════════════════════════════════════════════════════════
-const H = { modo:'dia', tab:'periodo', orden:{k:'k', dir:-1}, charts:{}, filas:[], periodos:[], lp:null, turnos:[], tstats:null, tipos:[], avisos:[] };
+const H = { tv:'periodo', tu:'min', tdata:null, modo:'dia', tab:'periodo', orden:{k:'k', dir:-1}, charts:{}, filas:[], periodos:[], lp:null, turnos:[], tstats:null, tipos:[], avisos:[] };
 const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const dd2 = n=>String(n).padStart(2,'0');
 const claveDia = d=>`${d.getFullYear()}-${dd2(d.getMonth()+1)}-${dd2(d.getDate())}`;
@@ -1060,10 +1072,10 @@ function construirFilasHistorico(){
   HALLAZGOS.forEach(h=>{ (hallPorId[h['ID_Reporte']] = hallPorId[h['ID_Reporte']] || []).push(h); });
   return REPORTES.map(r=>{
     const hs = (hallPorId[r['ID']]||[]).filter(h=>String(h['Defecto']||'').trim());
-    const conDef = hs.filter(h=>String(h['Defecto']).trim().toUpperCase()!=='SIN DEFECTOS');
+    const conDef = hs.filter(h=>normDefecto(h['Defecto'])!=='SIN DEFECTOS');
     const revisadas = num(r['Cantidad total de bolsas recibidas']);
     const sumaHall = conDef.reduce((s,h)=>s+num(h['Cantidad hallada']),0);
-    // Bolsas con defecto: la cifra del reporte; si no existe, la suma de sus hallazgos
+    // Defectos detectados: la cifra del reporte; si no existe, la suma de sus hallazgos
     const campoDef = r['Cantidad de bolsas con el defecto'];
     const defectuoso = (campoDef!==undefined && campoDef!=='' && campoDef!==null) ? num(campoDef) : sumaHall;
     const fh = fechaHora(r['Marca temporal']);
@@ -1075,8 +1087,8 @@ function construirFilasHistorico(){
       producto: r['Descripción del Producto']||'', lugar: r['Área donde se realiza la inspección']||'',
       revisadas, defectuoso, pct: revisadas>0 ? defectuoso/revisadas*100 : 0,
       liberadas: num(r['Cantidad de bolsas liberadas']), rechazadas: num(r['Cantidad de bolsas rechazadas']),
-      personal: r['Personal presente']||'', observaciones: r['Observaciones']||'',
-      hallazgos: conDef.map(h=>({ nombre:String(h['Defecto']).trim().toUpperCase(), hallada:num(h['Cantidad hallada']), segregada:num(h['Cantidad segregada']), reacondicionada:num(h['Cantidad reacondicionada']) }))
+      personal: r['Personal presente']||'', nPersonas: nPersonasDe(r['Personal presente']), observaciones: r['Observaciones']||'',
+      hallazgos: conDef.map(h=>({ nombre:normDefecto(h['Defecto']), hallada:num(h['Cantidad hallada']), segregada:num(h['Cantidad segregada']), reacondicionada:num(h['Cantidad reacondicionada']) }))
     };
   });
 }
@@ -1113,17 +1125,19 @@ function agruparPeriodos(filas, modo){
   });
   return arr;
 }
-/* Carta p′ de Laney (2002): límites = p̄ ± 3·σi·σz, con σi = √(p̄(1−p̄)/ni) y
-   σz = MR̄(z)/1.128. Con lotes de miles de bolsas la carta p clásica da límites
-   casi pegados a la media (todo saldría "fuera de control"); σz corrige esa
-   sobredispersión. */
+/* Carta u′ de Laney (2002) para DEFECTOS POR UNIDAD (una bolsa puede tener
+   varios defectos). u = defectos ÷ bolsas del periodo; ū = Σdefectos ÷ Σbolsas.
+   Límites = ū ± 3·σi·σz, con σi = √(ū/ni) (Poisson) y σz = MR̄(z)/1.128.
+   Con lotes de miles de bolsas la carta u clásica da límites casi pegados a la
+   media (todo saldría "fuera de control"); σz corrige esa sobredispersión.
+   El límite inferior no baja de 0 y el superior no se recorta (u puede pasar de 1). */
 function cartaLaney(arr){
-  const N = arr.reduce((s,o)=>s+o.insp,0), D = arr.reduce((s,o)=>s+o.def,0), pb = N ? D/N : 0;
-  arr.forEach(o=>{ o.si = Math.sqrt(pb*(1-pb)/o.insp); o.z = o.si>0 ? (o.p-pb)/o.si : 0; });
+  const N = arr.reduce((s,o)=>s+o.insp,0), D = arr.reduce((s,o)=>s+o.def,0), ub = N ? D/N : 0;
+  arr.forEach(o=>{ o.si = Math.sqrt(ub/o.insp); o.z = o.si>0 ? (o.p-ub)/o.si : 0; });
   let mr = 0; arr.forEach((o,i)=>{ o.mr = i ? Math.abs(o.z - arr[i-1].z) : null; if(i) mr += o.mr; });
   const sz = arr.length>1 ? (mr/(arr.length-1))/1.128 : 1;
-  arr.forEach(o=>{ o.pb = pb; o.ucl = Math.min(1, pb + 3*o.si*sz); o.lcl = Math.max(0, pb - 3*o.si*sz); o.fuera = o.p>o.ucl || o.p<o.lcl; });
-  return { pb, sz };
+  arr.forEach(o=>{ o.pb = ub; o.ucl = ub + 3*o.si*sz; o.lcl = Math.max(0, ub - 3*o.si*sz); o.fuera = o.p>o.ucl || o.p<o.lcl; });
+  return { pb:ub, sz };
 }
 // Cuartil inclusivo (igual que QUARTILE / PERCENTILE de Excel)
 function percentil(ord, q){
@@ -1180,6 +1194,10 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape' && document.getEle
 // La ventana está al final de la página (después de este script), por eso los
 // clics se atienden por delegación en lugar de enlazarlos al cargar.
 document.addEventListener('click', e=>{
+  const bv = e.target.closest('#ht-vista button');
+  if(bv){ H.tv = bv.dataset.v; document.querySelectorAll('#ht-vista button').forEach(x=>x.classList.toggle('on', x===bv)); pintarTiempos(); pintarGraficasHistorico(); return; }
+  const bu = e.target.closest('#ht-unidad button');
+  if(bu){ H.tu = bu.dataset.u; document.querySelectorAll('#ht-unidad button').forEach(x=>x.classList.toggle('on', x===bu)); pintarTiempos(); pintarGraficasHistorico(); return; }
   const bm = e.target.closest('#h-modo button');
   if(bm){ H.modo = bm.dataset.m; document.querySelectorAll('#h-modo button').forEach(x=>x.classList.toggle('on', x===bm)); renderHistorico(); return; }
   const bt = e.target.closest('.hist-tabs button');
@@ -1194,6 +1212,10 @@ document.addEventListener('click', e=>{
   }
   const th = e.target.closest('#tabla-periodo th[data-k]');
   if(th){ const k = th.dataset.k; H.orden = H.orden.k===k ? {k, dir:-H.orden.dir} : {k, dir:-1}; pintarTablaPeriodos(); }
+});
+
+document.addEventListener('change', e=>{
+  if(e.target && e.target.id==='ht-cap'){ H.tcap = Number(e.target.value)||120; pintarTiempos(); pintarGraficasHistorico(); }
 });
 
 // ── Cálculo + render ─────────────────────────────────────────────────────
@@ -1214,8 +1236,8 @@ function renderHistorico(){
   H.periodos = agruparPeriodos(H.filas, H.modo);
   H.lp = H.periodos.length ? cartaLaney(H.periodos) : { pb:0, sz:1 };
   const T = agruparTurnos(H.filas); H.turnos = T.arr; H.tstats = T.stats; H.tipos = T.tipos;
-  // Aviso de calidad de datos: 100 % defectivo sin rechazos (lote completo marcado)
-  H.avisos = H.periodos.filter(o=>o.p>=0.99 && o.rech===0).map(o=>etiquetaPeriodo(o.k, H.modo, true));
+  // Aviso de calidad de datos: periodos donde liberadas + rechazadas ≠ inspeccionadas
+  H.avisos = H.periodos.filter(o=>o.lib+o.rech!==o.insp).map(o=>etiquetaPeriodo(o.k, H.modo, true));
 
   const fechas = H.filas.map(f=>f.fechaObj).filter(Boolean);
   const partes = [cliente || 'Todos los clientes'];
@@ -1227,7 +1249,7 @@ function renderHistorico(){
   document.getElementById('hist-sub').textContent = partes.join(' · ');
   document.getElementById('hist-excel').disabled = !H.filas.length;
 
-  pintarKpis(); pintarAvisos(); pintarTablaPeriodos(); pintarTurnos(); pintarReportes(); pintarGraficasHistorico();
+  pintarKpis(); pintarAvisos(); pintarTablaPeriodos(); pintarTurnos(); pintarReportes(); pintarTiempos(); pintarGraficasHistorico();
 }
 
 function pintarKpis(){
@@ -1238,14 +1260,14 @@ function pintarKpis(){
   document.getElementById('hk-grid').innerHTML =
     k(nombre[0], fmt(P.length), `${fmt(H.filas.length)} reportes`) +
     k('Bolsas inspeccionadas', fmt(N), `Prom. ${fmt(P.length ? N/P.length : 0)} por ${nombre[1]}`) +
-    k('% defectivo (p̄)', pctF(pb), `${fmt(D)} con defecto`, pb>=0.10?'bad':pb<=0.03?'good':'') +
+    k('Tasa de defectos (ū)', pctF(pb), `${fmt(D)} defectos detectados`, pb>=0.10?'bad':pb<=0.03?'good':'') +
     k('% rechazo', pctF(pr), `${fmt(R)} rechazadas`, pr>=0.10?'bad':'') +
-    k('Periodos fuera de control', fmt(fuera), `de ${fmt(P.length)} (carta p′)`, fuera?'bad':'good') +
+    k('Periodos fuera de control', fmt(fuera), `de ${fmt(P.length)} (carta u′)`, fuera?'bad':'good') +
     k('Mediana bolsas / turno', fmt(H.tstats.med), `${fmt(H.tstats.n)} turnos con inspección`);
 }
 function pintarAvisos(){
   document.getElementById('hist-avisos').innerHTML = H.avisos.length
-    ? `<div class="hist-aviso">⚠️ <b>Revisar captura:</b> ${esc(H.avisos.join(', '))} ${H.avisos.length>1?'registran':'registra'} 100 % defectivo con 0 rechazadas (probablemente el lote completo se marcó como defectuoso y se reacondicionó). Esto eleva el % defectivo; conviene registrar solo las bolsas realmente defectuosas.</div>`
+    ? `<div class="hist-aviso">⚠️ <b>Revisar captura:</b> en ${esc(H.avisos.join(', '))} liberadas + rechazadas no es igual a las bolsas inspeccionadas. Corrige esos reportes desde <i>Ver historial completo</i> en la app (modo administrador).</div>`
     : '';
 }
 function pintarTablaPeriodos(){
@@ -1265,7 +1287,7 @@ function pintarTablaPeriodos(){
   document.getElementById('cards-periodo').innerHTML = filas.length ? filas.map(o=>`<div class="hc">
     <div class="top"><div style="min-width:0;"><div class="t">${etiquetaPeriodo(o.k,H.modo,true)}</div><div class="meta">${fmt(o.rep)} reporte(s) · ${fmt(o.nOt)} OT</div></div>
       <span class="pill ${o.fuera?'red':o.p>=0.03?'yellow':'green'}">${o.fuera?'◆ ':''}${pctF(o.p)}</span></div>
-    <div class="nums"><div><span>Inspecc.</span><b>${fmt(o.insp)}</b></div><div><span>Defecto</span><b>${fmt(o.def)}</b></div>
+    <div class="nums"><div><span>Inspecc.</span><b>${fmt(o.insp)}</b></div><div><span>Defectos</span><b>${fmt(o.def)}</b></div>
       <div><span>Rechaz.</span><b style="color:var(--error)">${fmt(o.rech)}</b></div><div><span>% rechazo</span><b>${pctF(o.pr)}</b></div></div>
     <div class="defs"><b>Defecto principal:</b> ${esc(o.top)}</div></div>`).join('')
     : '<div class="hist-vacio">No hay reportes con estos filtros.</div>';
@@ -1303,7 +1325,7 @@ function pintarReportes(){
     <div class="top"><div style="min-width:0;"><div class="t">${esc(f.ot)} · Ítem ${esc(f.item)}</div><div class="meta">${esc(f.cliente)}${f.lugar?' · '+esc(f.lugar):''}</div></div>
       <div style="text-align:right;"><div class="fecha">${esc(f.fecha)}</div><span class="pill ${clase(f.pct)}" style="margin-top:4px;">${pct(f.pct)}</span></div></div>
     ${f.producto?`<div class="desc">${esc(f.producto)}</div>`:''}
-    <div class="nums"><div><span>Revisadas</span><b>${fmt(f.revisadas)}</b></div><div><span>Defecto</span><b>${fmt(f.defectuoso)}</b></div>
+    <div class="nums"><div><span>Revisadas</span><b>${fmt(f.revisadas)}</b></div><div><span>Defectos</span><b>${fmt(f.defectuoso)}</b></div>
       <div><span>Liberadas</span><b style="color:var(--success)">${fmt(f.liberadas)}</b></div><div><span>Rechaz.</span><b style="color:var(--error)">${fmt(f.rechazadas)}</b></div></div>
     <div class="defs">${defHtml(f)}</div>
     ${f.personal?`<div class="extra">👷 ${esc(f.personal)}</div>`:''}
@@ -1329,14 +1351,15 @@ function cfgBarras(P, tam){
       scales:{ x:ejeXHist(tam), y:ejeYHist(tam) } } };
 }
 function cfgCarta(P, lp, tam, conLeyenda){
-  const ymax = Math.min(100, Math.ceil(Math.max(...P.map(o=>Math.max(o.p,o.ucl)))*100*1.08/5)*5 || 5);
+  // Sin tope de 100 %: la tasa de defectos puede superarlo si hay varios defectos por bolsa
+  const ymax = Math.ceil(Math.max(...P.map(o=>Math.max(o.p,o.ucl)))*100*1.08/5)*5 || 5;
   const lim = (datos,lbl)=>({ label:lbl, data:datos, borderColor:'#8A9BAD', borderDash:[5,4], borderWidth:1.5, pointRadius:0, stepped:'middle', fill:false });
   return { type:'line',
     data:{ labels:P.map(o=>etiquetaPeriodo(o.k,H.modo)), datasets:[
-      { label:'% defectivo', data:P.map(o=>+(o.p*100).toFixed(2)), borderColor:'#2a78d6', backgroundColor:'#2a78d6', borderWidth:2, tension:0,
+      { label:'Tasa de defectos', data:P.map(o=>+(o.p*100).toFixed(2)), borderColor:'#2a78d6', backgroundColor:'#2a78d6', borderWidth:2, tension:0,
         pointRadius:P.map(o=>o.fuera?7:3.5), pointHoverRadius:8, pointStyle:P.map(o=>o.fuera?'rectRot':'circle'),
         pointBackgroundColor:P.map(o=>o.fuera?'#C0392B':'#2a78d6'), pointBorderColor:'#fff', pointBorderWidth:1.5 },
-      { label:'Media p̄ ('+pctF(lp.pb)+')', data:P.map(()=>+(lp.pb*100).toFixed(2)), borderColor:'#1A2B3C', borderWidth:1.5, pointRadius:0 },
+      { label:'Media ū ('+pctF(lp.pb)+')', data:P.map(()=>+(lp.pb*100).toFixed(2)), borderColor:'#1A2B3C', borderWidth:1.5, pointRadius:0 },
       lim(P.map(o=>+(o.ucl*100).toFixed(2)),'Límites de control (±3σ)'),
       lim(P.map(o=>+(o.lcl*100).toFixed(2)),'LCI')
     ]},
@@ -1345,7 +1368,7 @@ function cfgCarta(P, lp, tam, conLeyenda){
         legend:{ display:!!conLeyenda, position:'bottom', labels:{ font:{size:tam}, boxWidth:18, filter:it=>it.text!=='LCI' } },
         tooltip:{ filter:it=>it.datasetIndex===0, callbacks:{
           title:it=>etiquetaPeriodo(P[it[0].dataIndex].k, H.modo, true) + (P[it[0].dataIndex].fuera?'  ◆ fuera de control':''),
-          label:ctx=>{ const o=P[ctx.dataIndex]; return [`% defectivo: ${pctF(o.p)} (${fmt(o.def)} / ${fmt(o.insp)})`, `LCS ${pctF(o.ucl)} · LCI ${pctF(o.lcl)}`, `Defecto principal: ${o.top}`]; } } } },
+          label:ctx=>{ const o=P[ctx.dataIndex]; return [`Tasa de defectos: ${pctF(o.p)} (${fmt(o.def)} defectos / ${fmt(o.insp)} bolsas)`, `LCS ${pctF(o.ucl)} · LCI ${pctF(o.lcl)}`, `Defecto principal: ${o.top}`]; } } } },
       scales:{ x:ejeXHist(tam), y:ejeYHist(tam,{ max:ymax, ticks:{ callback:v=>v+'%', color:'#5A7185', font:{size:tam} } }) } } };
 }
 function cfgTurnos(Tt, stats, tam){
@@ -1372,7 +1395,7 @@ function cfgPareto(D, tam){
   const top = D.slice(0,10);
   return { type:'bar',
     data:{ labels:top.map(d=>d.nombre.length>22 ? d.nombre.slice(0,21)+'…' : d.nombre), datasets:[
-      { type:'bar', label:'Bolsas con el defecto', data:top.map(d=>d.cant), backgroundColor:'#005B96', borderRadius:4, yAxisID:'y', order:2 },
+      { type:'bar', label:'Defectos detectados', data:top.map(d=>d.cant), backgroundColor:'#005B96', borderRadius:4, yAxisID:'y', order:2 },
       { type:'line', label:'% acumulado', data:top.map(d=>+(d.acum*100).toFixed(1)), borderColor:'#eda100', backgroundColor:'#eda100', yAxisID:'y1', tension:.25, pointRadius:4, order:1 }
     ]},
     options:{ responsive:true, maintainAspectRatio:false, animation:false,
@@ -1392,6 +1415,7 @@ function pintarGraficasHistorico(){
   if(H.tab==='turno' && H.turnos.length){
     H.charts.turnos = new Chart(document.getElementById('hc-turnos'), cfgTurnos(H.turnos, H.tstats, tam));
   }
+  if(H.tab==='tiempos') pintarGraficasTiempos(tam);
 }
 window.addEventListener('resize', ()=>{ clearTimeout(H._rz); H._rz = setTimeout(pintarGraficasHistorico, 250); });
 
@@ -1408,6 +1432,241 @@ function graficaComoImagen(cfg, ancho, alto){
   const url = ch.toBase64Image('image/png', 1);
   ch.destroy(); cont.remove();
   return url;
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// TIEMPO EMPLEADO EN SEGREGACIÓN Y REACONDICIONAMIENTO — ESTIMADO A PARTIR
+// DE LO YA REPORTADO (no requiere capturar minutos).
+//  1) Tiempo de cada reporte = minutos desde el reporte anterior DEL MISMO TURNO
+//     Y CLIENTE (el primero del turno cuenta desde el inicio del turno).
+//     · Menos de 3 min → captura en bloque: no se puede estimar.
+//     · Más del tope (por defecto 120 min) → descanso, paro o captura tardía: se descarta.
+//  2) Solo se consideran los reportes que tuvieron bolsas segregadas o
+//     reacondicionadas. Su tiempo se reparte entre esos defectos en proporción
+//     a las bolsas segregadas + reacondicionadas de cada uno.
+//  3) Es una ESTIMACIÓN: el intervalo incluye también la inspección del lote.
+//  Turnos: T1 07–15 h (8 h) · T2 15–22 h (7 h) · T3 22–07 h (9 h).
+// ══════════════════════════════════════════════════════════════════════
+const COL_SEG = '#2a78d6', COL_REA = '#eda100';
+const TURNO_DEF = { T1:{ini:7,horas:8}, T2:{ini:15,horas:7}, T3:{ini:22,horas:9} };
+const GAP_MIN_LOTE = 3; // minutos: menos que esto = captura en bloque
+H.tcap = 120;           // minutos: más que esto = intervalo descartado
+function nPersonasDe(txt){ return String(txt||'').split(',').map(s=>s.trim()).filter(Boolean).length || 1; }
+function inicioTurno(f){ const d = new Date(f.fechaTurno); d.setHours(TURNO_DEF[f.turno].ini,0,0,0); return d; }
+// Duración estimada de cada reporte (usa TODOS los reportes de la base, no solo los filtrados,
+// para que un filtro de búsqueda no alargue artificialmente los intervalos)
+function estimarDuraciones(){
+  const todas = construirFilasHistorico().filter(f=>f.fh && f.fechaTurno && TURNO_DEF[f.turno]);
+  const grupos = {};
+  todas.forEach(f=>{ const k = claveDia(f.fechaTurno)+'|'+f.turno+'|'+f.cliente; (grupos[k] = grupos[k] || []).push(f); });
+  const res = {};
+  Object.values(grupos).forEach(arr=>{
+    arr.sort((a,b)=>a.fh-b.fh);
+    arr.forEach((f,i)=>{
+      const ref = i===0 ? inicioTurno(f) : arr[i-1].fh;
+      const gap = (f.fh - ref)/60000;
+      const estado = gap < GAP_MIN_LOTE ? 'lote' : (gap > H.tcap ? 'largo' : 'ok');
+      res[f.id] = { min: estado==='ok' ? gap : 0, gap, estado };
+    });
+  });
+  return res;
+}
+const ESTADO_TXT = { ok:'Estimado', lote:'Captura en bloque', largo:'Intervalo largo', sin:'Sin hora' };
+function construirTiempos(){
+  const dur = estimarDuraciones();
+  const rows = []; const rep = { total:0, ok:0, lote:0, largo:0, sin:0 };
+  H.filas.forEach(f=>{
+    const hs = f.hallazgos.filter(h=>h.segregada>0 || h.reacondicionada>0);
+    if(!hs.length) return;
+    rep.total++;
+    const d = dur[f.id] || { min:0, estado:'sin' };
+    rep[d.estado]++;
+    const bolsas = hs.reduce((s,h)=>s+h.segregada+h.reacondicionada,0);
+    hs.forEach(h=>{
+      rows.push({ id:f.id, fecha:f.fechaObj, fechaTurno:f.fechaTurno, turno:f.turno, cliente:f.cliente, ot:f.ot,
+        item:String(f.item||'—'), producto:String(f.producto||'—'), defecto:h.nombre,
+        segQ:h.segregada, reaQ:h.reacondicionada,
+        segMin: d.min * h.segregada/bolsas, reaMin: d.min * h.reacondicionada/bolsas,
+        estado:d.estado, repMin:d.min, personas:f.nPersonas||1 });
+    });
+  });
+  return { rows, rep, sinTiempo: rep.total - rep.ok };
+}
+const tVal = (min, r)=> H.tu==='hp' ? min*r.personas/60 : min;
+function tFmt(x){ return H.tu==='hp' ? x.toLocaleString('es-MX',{minimumFractionDigits:1,maximumFractionDigits:1})+' h-p' : fmt(x)+' min'; }
+function tCelda(x){ return x>0 ? tFmt(x) : '—'; }
+function rateFmt(x){ return x==null ? '—' : x.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function horasMin(m){ const h = Math.floor(m/60), mm = Math.round(m%60); return h ? `${h} h ${mm} min` : `${mm} min`; }
+// Agrupa filas por llave; tiempos en la unidad elegida; min/bolsa en minutos de reloj (solo filas con tiempo estimado)
+function acumularT(rows, keyFn, metaFn){
+  const g = {};
+  rows.forEach(r=>{
+    const k = keyFn(r);
+    const o = g[k] = g[k] || Object.assign({ k, segQ:0, reaQ:0, segMin:0, reaMin:0, raw:0, qt:0, n:0 }, metaFn ? metaFn(r) : {});
+    o.n++; o.segQ += r.segQ; o.reaQ += r.reaQ;
+    if(r.estado==='ok'){
+      o.segMin += tVal(r.segMin,r); o.reaMin += tVal(r.reaMin,r);
+      o.raw += r.segMin + r.reaMin; o.qt += r.segQ + r.reaQ;
+    }
+  });
+  return Object.values(g).map(o=>{ o.total = o.segMin + o.reaMin; o.rate = o.qt>0 ? o.raw/o.qt : null; return o; });
+}
+function tKeyPeriodo(r){
+  if(H.tv==='turno') return r.fechaTurno ? claveDia(r.fechaTurno)+'|'+r.turno : '?|?';
+  return r.fecha ? claveDia(inicioPeriodo(r.fecha, H.modo)) : '?';
+}
+function tEtqPeriodo(k, larga){
+  if(k.startsWith('?')) return 'Sin fecha';
+  if(H.tv==='turno'){ const [d,t] = k.split('|'); return etiquetaPeriodo(d,'dia',larga)+' · '+t; }
+  return etiquetaPeriodo(k, H.modo, larga);
+}
+// Uso de cada turno: tiempo estimado en seg./reac. frente a las horas del turno
+function usoTurnos(rows){
+  const g = {};
+  const porRep = {}; // un reporte cuenta una sola vez para el tiempo del turno
+  rows.forEach(r=>{
+    if(!r.fechaTurno) return;
+    const k = claveDia(r.fechaTurno)+'|'+r.turno;
+    const o = g[k] = g[k] || { k, fecha:claveDia(r.fechaTurno), turno:r.turno, reps:new Set(), rep:0, ok:0, segRaw:0, reaRaw:0, personasMax:1 };
+    if(!o.reps.has(r.id)){ o.reps.add(r.id); o.rep++; if(r.estado==='ok') o.ok++; }
+    if(r.estado==='ok'){ o.segRaw += r.segMin; o.reaRaw += r.reaMin; }
+    o.personasMax = Math.max(o.personasMax, r.personas);
+  });
+  return Object.values(g).map(o=>{
+    o.total = o.segRaw + o.reaRaw; o.horas = TURNO_DEF[o.turno].horas;
+    o.pct = o.total / (o.horas*60);
+    return o;
+  }).sort((a,b)=> a.k<b.k ? -1 : 1);
+}
+function tDatos(){
+  const rows = H.tdata.rows;
+  const cor = s => s.length>24 ? s.slice(0,23)+'…' : s;
+  const uso = usoTurnos(rows);
+  const tipos = ['T1','T2','T3'].map(t=>{
+    const xs = uso.filter(o=>o.turno===t);
+    const total = xs.reduce((s,o)=>s+o.total,0);
+    return { k:t, n:xs.length, total, prom: xs.length ? total/xs.length : 0, pctProm: xs.length ? xs.reduce((s,o)=>s+o.pct,0)/xs.length : 0 };
+  });
+  return {
+    serie: acumularT(rows, tKeyPeriodo).sort((a,b)=> a.k<b.k ? -1 : 1),
+    porDefecto: acumularT(rows, r=>r.defecto).sort((a,b)=>b.total-a.total),
+    porProducto: acumularT(rows, r=>r.item+'|'+r.producto, r=>({item:r.item, producto:r.producto})).sort((a,b)=>b.total-a.total),
+    resumen: acumularT(rows, r=>r.item+'|'+r.producto+'|'+r.defecto, r=>({item:r.item, producto:r.producto, defecto:r.defecto})).sort((a,b)=> b.total-a.total || (b.segQ+b.reaQ)-(a.segQ+a.reaQ)),
+    detalle: acumularT(rows, r=>tKeyPeriodo(r)+'§'+r.item+'|'+r.producto+'|'+r.defecto, r=>({per:tKeyPeriodo(r), item:r.item, producto:r.producto, defecto:r.defecto}))
+      .sort((a,b)=> a.per<b.per ? 1 : a.per>b.per ? -1 : b.total-a.total),
+    total: acumularT(rows, ()=>'t')[0],
+    uso, tipos, cor
+  };
+}
+
+function pintarTiempos(){
+  H.tdata = construirTiempos();
+  const { rows, rep } = H.tdata;
+  const vacio = document.getElementById('ht-vacio'), cont = document.getElementById('ht-contenido');
+  document.querySelector('#ht-vista button[data-v="periodo"]').textContent = 'Por ' + ({dia:'día',semana:'semana',mes:'mes'})[H.modo];
+  if(!rows.length){ vacio.style.display = 'block'; cont.style.display = 'none'; return; }
+  vacio.style.display = 'none'; cont.style.display = 'block';
+  const D = tDatos(), T = D.total;
+  const k = (l,v,s,cls)=>`<div class="hk"><div class="l">${l}</div><div class="v ${cls||''}" style="font-size:19px;">${v}</div><div class="s">${s}</div></div>`;
+  const equivMin = H.tu==='min' ? ` · ${horasMin(T.total)}` : '';
+  const turnoMas = D.tipos.filter(t=>t.total>0).sort((a,b)=>b.prom-a.prom)[0];
+  document.getElementById('ht-kpis').innerHTML =
+    k('⏱ Tiempo segregando (est.)', tFmt(T.segMin), `${fmt(T.segQ)} bolsas segregadas`) +
+    k('⏱ Tiempo reacondicionando (est.)', tFmt(T.reaMin), `${fmt(T.reaQ)} bolsas reacondicionadas`) +
+    k('Tiempo total estimado', tFmt(T.total), `${fmt(rep.ok)} de ${fmt(rep.total)} reportes con tiempo estimable${equivMin}`) +
+    k('Min por bolsa tratada', rateFmt(T.rate), 'segregada o reacondicionada (minutos de reloj)') +
+    k('Turno con mayor carga', turnoMas ? turnoMas.k : '—', turnoMas ? `${horasMin(turnoMas.prom)} promedio por turno · ${pctF(turnoMas.pctProm)} del turno` : 'sin tiempos estimables') +
+    k('Mayor consumo de tiempo', D.porDefecto.length && D.porDefecto[0].total>0 ? esc(D.porDefecto[0].k) : '—', D.porDefecto.length && D.porDefecto[0].total>0 ? tFmt(D.porDefecto[0].total) : 'sin tiempos estimables');
+  const partes = [];
+  if(rep.lote) partes.push(`<b>${fmt(rep.lote)}</b> por captura en bloque (menos de ${GAP_MIN_LOTE} min después del reporte anterior)`);
+  if(rep.largo) partes.push(`<b>${fmt(rep.largo)}</b> por un intervalo mayor a ${H.tcap} min (descanso, paro o captura tardía)`);
+  if(rep.sin) partes.push(`<b>${fmt(rep.sin)}</b> por no tener hora válida`);
+  document.getElementById('ht-aviso').innerHTML = partes.length
+    ? `<div class="hist-aviso">⚠️ De ${fmt(rep.total)} reporte(s) con segregación o reacondicionamiento, ${fmt(rep.ok)} tienen tiempo estimable. Sin tiempo: ${partes.join('; ')}. Sus bolsas se cuentan, pero no suman tiempo. Ajusta el tope de intervalo si tus reportes se capturan con más espera.</div>` : '';
+
+  // Tablas ítem → producto → defecto
+  const fila = o => `<td>${esc(o.item)}</td><td class="txt">${esc(o.producto)}</td><td>${esc(o.defecto)}</td>`
+    + `<td class="n">${fmt(o.segQ)}</td><td class="n">${tCelda(o.segMin)}</td><td class="n">${fmt(o.reaQ)}</td><td class="n">${tCelda(o.reaMin)}</td>`
+    + `<td class="n"><b>${tCelda(o.total)}</b></td><td class="n">${rateFmt(o.rate)}</td>`;
+  const tarjeta = (o, extra) => `<div class="hc"><div class="top"><div style="min-width:0;"><div class="t">${esc(o.item)} · ${esc(o.producto)}</div><div class="meta">${esc(o.defecto)}${extra?' · '+esc(extra):''}</div></div>`
+    + `<span class="pill ${o.total>0?'yellow':'green'}">${o.total>0?tFmt(o.total):'sin tiempo'}</span></div>`
+    + `<div class="nums"><div><span>Seg. (bolsas)</span><b>${fmt(o.segQ)}</b></div><div><span>Seg. tiempo</span><b>${o.segMin>0?tFmt(o.segMin):'—'}</b></div>`
+    + `<div><span>Reac. (bolsas)</span><b>${fmt(o.reaQ)}</b></div><div><span>Reac. tiempo</span><b>${o.reaMin>0?tFmt(o.reaMin):'—'}</b></div></div></div>`;
+  document.querySelector('#tabla-t-resumen tbody').innerHTML = D.resumen.map(o=>`<tr>${fila(o)}</tr>`).join('');
+  document.getElementById('cards-t-resumen').innerHTML = D.resumen.map(o=>tarjeta(o)).join('');
+
+  const MAXF = 300, det = D.detalle;
+  document.getElementById('th-per').textContent = H.tv==='turno' ? 'Turno' : ({dia:'Día',semana:'Semana',mes:'Mes'})[H.modo];
+  document.querySelector('#tabla-t-detalle tbody').innerHTML = det.slice(0,MAXF).map(o=>`<tr><td style="white-space:nowrap;">${esc(tEtqPeriodo(o.per,true))}</td>${fila(o)}</tr>`).join('');
+  document.getElementById('cards-t-detalle').innerHTML = det.slice(0,MAXF).map(o=>tarjeta(o, tEtqPeriodo(o.per,true))).join('');
+  document.getElementById('ht-detalle-nota').textContent = det.length>MAXF ? `Se muestran las ${MAXF} primeras de ${fmt(det.length)} filas; el Excel exportado trae todas.` : `${fmt(det.length)} fila(s).`;
+
+  // Uso de cada turno
+  document.querySelector('#tabla-t-turnos tbody').innerHTML = D.uso.slice().reverse().map(o=>`<tr>
+    <td style="white-space:nowrap;">${etiquetaPeriodo(o.fecha,'dia',true)}</td><td><b>${o.turno}</b></td><td class="n">${fmt(o.rep)}</td><td class="n">${fmt(o.ok)}</td>
+    <td class="n">${o.segRaw>0?fmt(o.segRaw)+' min':'—'}</td><td class="n">${o.reaRaw>0?fmt(o.reaRaw)+' min':'—'}</td><td class="n"><b>${o.total>0?horasMin(o.total):'—'}</b></td>
+    <td class="n">${o.horas} h</td><td class="n"><span class="pill ${o.pct>=0.5?'red':o.pct>=0.25?'yellow':'green'}">${pctF(o.pct)}</span></td></tr>`).join('');
+  document.querySelector('#tabla-t-tipos tbody').innerHTML = D.tipos.map(t=>`<tr>
+    <td><b>${t.k}</b> <span style="color:var(--muted);font-size:11.5px;">${({T1:'07–15 h',T2:'15–22 h',T3:'22–07 h'})[t.k]}</span></td>
+    <td class="n">${fmt(t.n)}</td><td class="n">${t.total>0?horasMin(t.total):'—'}</td><td class="n">${t.n?horasMin(t.prom):'—'}</td><td class="n">${t.n?pctF(t.pctProm):'—'}</td></tr>`).join('');
+}
+
+// ── Configuraciones de gráficas de tiempo ────────────────────────────────
+function tTooltip(){ return { callbacks:{ label:ctx=>`${ctx.dataset.label}: ${tFmt(ctx.chart.options.indexAxis==='y' ? ctx.parsed.x : ctx.parsed.y)}` } }; }
+function cfgTSerie(A, tam){
+  return { type:'bar',
+    data:{ labels:A.map(o=>tEtqPeriodo(o.k,false)), datasets:[
+      { label:'Segregación', data:A.map(o=>+o.segMin.toFixed(2)), backgroundColor:COL_SEG, stack:'t', borderRadius:3, maxBarThickness:40 },
+      { label:'Reacondicionamiento', data:A.map(o=>+o.reaMin.toFixed(2)), backgroundColor:COL_REA, stack:'t', borderRadius:3, maxBarThickness:40 } ]},
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{ legend:{ position:'bottom', labels:{ font:{size:tam}, boxWidth:14 } }, tooltip:tTooltip() },
+      scales:{ x:Object.assign(ejeXHist(tam),{stacked:true}), y:ejeYHist(tam,{stacked:true}) } } };
+}
+function cfgTBarrasH(A, tam, etiqueta){
+  const top = A.filter(o=>o.total>0).slice(0,10);
+  return { type:'bar',
+    data:{ labels:top.map(etiqueta), datasets:[
+      { label:'Segregación', data:top.map(o=>+o.segMin.toFixed(2)), backgroundColor:COL_SEG, stack:'t', borderRadius:3 },
+      { label:'Reacondicionamiento', data:top.map(o=>+o.reaMin.toFixed(2)), backgroundColor:COL_REA, stack:'t', borderRadius:3 } ]},
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{ legend:{ position:'bottom', labels:{ font:{size:tam}, boxWidth:14 } }, tooltip:tTooltip() },
+      scales:{ x:ejeYHist(tam,{stacked:true}), y:{ stacked:true, grid:{display:false}, ticks:{ font:{size:tam}, color:'#1A2B3C' } } } } };
+}
+function cfgTTasa(A, tam){
+  const top = A.filter(o=>o.rate!=null).slice(0,10);
+  return { type:'bar',
+    data:{ labels:top.map(o=>o.k.length>26 ? o.k.slice(0,25)+'…' : o.k), datasets:[
+      { label:'Min por bolsa tratada', data:top.map(o=>+o.rate.toFixed(2)), backgroundColor:'#4a3aa7', borderRadius:3 } ]},
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:ctx=>`${rateFmt(ctx.parsed.x)} min por bolsa` } } },
+      scales:{ x:ejeYHist(tam), y:{ grid:{display:false}, ticks:{ font:{size:tam}, color:'#1A2B3C' } } } } };
+}
+function cfgTUso(U, tam){
+  return { type:'bar',
+    data:{ labels:U.map(o=>etiquetaPeriodo(o.fecha,'dia')+' '+o.turno), datasets:[
+      { label:'% del turno en segregación / reacondicionamiento', data:U.map(o=>+(o.pct*100).toFixed(1)), backgroundColor:U.map(o=>COL_TURNO[o.turno]), borderRadius:3, maxBarThickness:28 } ]},
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ title:it=>{ const o=U[it[0].dataIndex]; return `${etiquetaPeriodo(o.fecha,'dia',true)} · ${o.turno}`; },
+        label:ctx=>{ const o=U[ctx.dataIndex]; return [`${ctx.parsed.y}% del turno (${horasMin(o.total)} de ${o.horas} h)`, `${o.ok} de ${o.rep} reportes con tiempo estimable`]; } } } },
+      scales:{ x:{ grid:{display:false}, ticks:{ maxRotation:0, autoSkip:true, autoSkipPadding:12, font:{size:tam}, color:'#5A7185' } }, y:ejeYHist(tam,{ ticks:{ callback:v=>v+'%', color:'#5A7185', font:{size:tam} } }) } } };
+}
+function cfgTTurno(A, tam){
+  return { type:'doughnut',
+    data:{ labels:A.map(o=>o.k), datasets:[{ data:A.map(o=>+(o.total||0).toFixed(1)), backgroundColor:A.map(o=>COL_TURNO[o.k]), borderWidth:2, borderColor:'#fff' }] },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false, cutout:'58%',
+      plugins:{ legend:{ position:'bottom', labels:{ font:{size:tam}, boxWidth:14 } },
+        tooltip:{ callbacks:{ label:ctx=>`${ctx.label}: ${horasMin(ctx.parsed)}` } } } } };
+}
+function pintarGraficasTiempos(tam){
+  if(!H.tdata || !H.tdata.rows.length) return;
+  const D = tDatos();
+  H.charts.tUso = new Chart(document.getElementById('ht-uso'), cfgTUso(D.uso, tam));
+  H.charts.tSerie = new Chart(document.getElementById('ht-serie'), cfgTSerie(D.serie, tam));
+  H.charts.tDefecto = new Chart(document.getElementById('ht-defecto'), cfgTBarrasH(D.porDefecto, tam, o=>D.cor(o.k)));
+  H.charts.tProducto = new Chart(document.getElementById('ht-producto'), cfgTBarrasH(D.porProducto, tam, o=>D.cor(o.item+' · '+o.producto)));
+  H.charts.tTasa = new Chart(document.getElementById('ht-tasa'), cfgTTasa(D.porDefecto, tam));
+  H.charts.tTurno = new Chart(document.getElementById('ht-turno'), cfgTTurno(D.tipos, tam));
 }
 
 // ── Exportar a Excel (con formato y gráficas) ─────────────────────────────
@@ -1559,9 +1818,9 @@ async function exportarHistoricoExcel(){
     const kpis = [
       [`${nomPlural} con inspección`, P.length, '#,##0', `${fmt(H.filas.length)} reportes`, XL.texto],
       ['Bolsas inspeccionadas', N, '#,##0', `Prom. ${fmt(P.length? N/P.length:0)} por ${unidad}`, XL.texto],
-      ['% defectivo (p̄)', pb, '0.0%', `${fmt(D)} con defecto`, pb>=0.10?XL.rojo:pb<=0.03?XL.verde:XL.texto],
+      ['Tasa de defectos (ū)', pb, '0.0%', `${fmt(D)} defectos detectados`, pb>=0.10?XL.rojo:pb<=0.03?XL.verde:XL.texto],
       ['% rechazo', pr, '0.0%', `${fmt(R)} rechazadas`, pr>=0.10?XL.rojo:XL.texto],
-      ['Periodos fuera de control', fuera, '#,##0', `de ${fmt(P.length)} (carta p′)`, fuera?XL.rojo:XL.verde],
+      ['Periodos fuera de control', fuera, '#,##0', `de ${fmt(P.length)} (carta u′)`, fuera?XL.rojo:XL.verde],
       ['Mediana bolsas / turno', Math.round(H.tstats.med), '#,##0', `${fmt(H.tstats.n)} turnos`, XL.texto]
     ];
     ws.getRow(4).height = 18; ws.getRow(5).height = 30; ws.getRow(6).height = 16;
@@ -1580,7 +1839,7 @@ async function exportarHistoricoExcel(){
     let fila = 8;
     if(H.avisos.length){
       ws.mergeCells(fila,1,fila,12);
-      const a = ws.getCell(fila,1); a.value = `⚠ Revisar captura: ${H.avisos.join(', ')} — 100 % defectivo con 0 rechazadas (probablemente el lote completo se marcó como defectuoso). Esto eleva el % defectivo.`;
+      const a = ws.getCell(fila,1); a.value = `⚠ Revisar captura: en ${H.avisos.join(', ')} liberadas + rechazadas no es igual a las bolsas inspeccionadas.`;
       a.fill = fill(XL.ambarClaro); a.font = { size:10, color:{argb:XL.ambar}, bold:true }; a.alignment = { wrapText:true, vertical:'middle', indent:1 };
       ws.getRow(fila).height = 32; fila += 2;
     }
@@ -1588,7 +1847,7 @@ async function exportarHistoricoExcel(){
       xlSeccion(ws, fila, 'Bolsas inspeccionadas por '+unidad, 12); fila += 1;
       xlImagen(wb, ws, img.barras, 0, fila, 1100*0.78, 380*0.78); fila += 16;
       ws.getRow(fila-1).addPageBreak();
-      xlSeccion(ws, fila, '% defectivo — carta de control p′ (Laney)   ◆ = fuera de control', 12); fila += 1;
+      xlSeccion(ws, fila, 'Tasa de defectos — carta de control u′ (Laney)   ◆ = fuera de control', 12); fila += 1;
       xlImagen(wb, ws, img.carta, 0, fila, 1100*0.78, 430*0.78); fila += 18;
     }
     if(pareto.length){
@@ -1598,7 +1857,7 @@ async function exportarHistoricoExcel(){
       // tabla del Pareto a la derecha de la gráfica
       const ini = fila; const cols = [7,10,11,12];
       ws.mergeCells(ini,7,ini,9);
-      ['Defecto','Bolsas','% del total','% acumulado'].forEach((t,i)=>{ const c = ws.getCell(ini, cols[i]); c.value=t; c.font={bold:true,color:{argb:'FFFFFFFF'},size:9.5}; c.fill=fill(XL.azul); c.border=bordeFino; c.alignment={horizontal:i?'right':'left',vertical:'middle'}; });
+      ['Defecto','Defectos','% del total','% acumulado'].forEach((t,i)=>{ const c = ws.getCell(ini, cols[i]); c.value=t; c.font={bold:true,color:{argb:'FFFFFFFF'},size:9.5}; c.fill=fill(XL.azul); c.border=bordeFino; c.alignment={horizontal:i?'right':'left',vertical:'middle'}; });
       pareto.slice(0,12).forEach((d,i)=>{
         const r = ini+1+i; ws.mergeCells(r,7,r,9);
         [[d.nombre,null],[d.cant,'#,##0'],[d.pct,'0.0%'],[d.acum,'0.0%']].forEach(([v,f],j)=>{
@@ -1612,11 +1871,11 @@ async function exportarHistoricoExcel(){
 
     // ── 2) Por periodo ──
     const wp = wb.addWorksheet('Por periodo', { properties:{ tabColor:{argb:'FF2A78D6'} } });
-    xlTitulo(wp, `Histórico por ${unidad} — ${cliente}`, 'Carta p′ de Laney: LCS/LCI = p̄ ± 3·σi·σz  ·  ◆ = fuera de control (causa especial a investigar)', 16);
+    xlTitulo(wp, `Histórico por ${unidad} — ${cliente}`, 'Carta u′ de Laney: LCS/LCI = ū ± 3·σi·σz  ·  ◆ = fuera de control (causa especial a investigar)  ·  Tasa = defectos ÷ bolsas inspeccionadas', 16);
     xlTabla(wp, 4, [
       {t:nomPer,w:22},{t:'Reportes',n:1,w:9,fmt:'#,##0'},{t:'OT',n:1,w:7,fmt:'#,##0'},{t:'Bolsas inspeccionadas',n:1,w:14,fmt:'#,##0'},
-      {t:'Bolsas con defecto',n:1,w:12,fmt:'#,##0'},{t:'% defectivo',n:1,w:11,fmt:'0.00%'},{t:'Bolsas rechazadas',n:1,w:12,fmt:'#,##0'},{t:'% rechazo',n:1,w:10,fmt:'0.00%'},
-      {t:'p̄',n:1,w:8,fmt:'0.00%'},{t:'σi',n:1,w:8,fmt:'0.0000'},{t:'z',n:1,w:8,fmt:'0.00'},{t:'MR',n:1,w:8,fmt:'0.00'},
+      {t:'Defectos detectados',n:1,w:12,fmt:'#,##0'},{t:'Tasa de defectos',n:1,w:11,fmt:'0.00%'},{t:'Bolsas rechazadas',n:1,w:12,fmt:'#,##0'},{t:'% rechazo',n:1,w:10,fmt:'0.00%'},
+      {t:'ū',n:1,w:8,fmt:'0.00%'},{t:'σi',n:1,w:8,fmt:'0.0000'},{t:'z',n:1,w:8,fmt:'0.00'},{t:'MR',n:1,w:8,fmt:'0.00'},
       {t:'LCS',n:1,w:9,fmt:'0.00%'},{t:'LCI',n:1,w:9,fmt:'0.00%'},{t:'Estado',w:18},{t:'Defecto principal',w:34,wrap:1}
     ], P.slice().reverse().map(o=>[etiquetaPeriodo(o.k,H.modo,true), o.rep, o.nOt, o.insp, o.def, o.p, o.rech, o.pr, o.pb, o.si, o.z, o.mr==null?null:o.mr, o.ucl, o.lcl, o.fuera?'◆ Fuera de control':'En control', o.top]),
     { fijarCol:true, colorear:(row,f)=>{
@@ -1655,7 +1914,6 @@ async function exportarHistoricoExcel(){
     [11,12,9,10,13,11,13].forEach((w,i)=>{ wt.getColumn(ct+i).width = Math.max(wt.getColumn(ct+i).width||0, w); });
     ft += 11;
     xlSeccion(wt, ft, 'Detalle por turno', 12); ft += 1;
-    const wsTurnoIni = ft;
     xlTabla(wt, ft, [{t:'Fecha turno',w:14},{t:'Turno',w:12},{t:'Reportes',n:1,w:12,fmt:'#,##0'},{t:'Bolsas inspeccionadas',n:1,w:12,fmt:'#,##0'},{t:'Atípico (Tukey)',w:11}],
       H.turnos.slice().reverse().map(o=>[etiquetaPeriodo(o.fecha,'dia',true), o.turno, o.rep, o.insp, o.atipico?'Sí (posible captura acumulada)':'']),
       { colorear:(row,f)=>{ if(f[4]){ [4,5].forEach(c=>{ const x=row.getCell(c); x.fill=fill(XL.ambarClaro); x.font={bold:true,size:10,color:{argb:XL.ambar}}; }); } } });
@@ -1667,7 +1925,7 @@ async function exportarHistoricoExcel(){
     xlTitulo(wr, `Reportes — ${cliente}`, `${fmt(H.filas.length)} reporte(s) con los filtros aplicados`, 16);
     xlTabla(wr, 4, [
       {t:'Fecha',w:16},{t:'Turno',w:7},{t:'Cliente',w:18},{t:'Número de OT',w:13},{t:'Ítem',w:13},{t:'Producto',w:30,wrap:1},{t:'Lugar de servicio',w:24,wrap:1},
-      {t:'Bolsas revisadas',n:1,w:11,fmt:'#,##0'},{t:'Bolsas con defecto',n:1,w:11,fmt:'#,##0'},{t:'% defectivo',n:1,w:10,fmt:'0.00%'},
+      {t:'Bolsas revisadas',n:1,w:11,fmt:'#,##0'},{t:'Defectos detectados',n:1,w:11,fmt:'#,##0'},{t:'Tasa de defectos',n:1,w:10,fmt:'0.00%'},
       {t:'Bolsas liberadas',n:1,w:11,fmt:'#,##0'},{t:'Bolsas rechazadas',n:1,w:11,fmt:'#,##0'},{t:'Defectos',w:38,wrap:1},{t:'Personal',w:26,wrap:1},{t:'Observaciones',w:34,wrap:1},{t:'ID reporte',w:14}
     ], H.filas.map(f=>[f.fecha, f.turno, f.cliente, f.ot, f.item, f.producto, f.lugar, f.revisadas, f.defectuoso, f.revisadas?f.defectuoso/f.revisadas:0, f.liberadas, f.rechazadas,
       f.hallazgos.map(h=>`${h.nombre}: ${h.hallada.toLocaleString('es-MX')}`).join('\n') || 'Sin defectos', f.personal, f.observaciones, f.id]),
@@ -1680,9 +1938,50 @@ async function exportarHistoricoExcel(){
     xlTitulo(wh, `Hallazgos por defecto — ${cliente}`, 'Un renglón por defecto registrado (listo para tablas dinámicas)', 10);
     const hall = []; H.filas.forEach(f=>f.hallazgos.forEach(h=>hall.push([f.fecha, f.cliente, f.ot, f.item, h.nombre, h.hallada, h.segregada, h.reacondicionada, f.revisadas? h.hallada/f.revisadas : 0, f.id])));
     xlTabla(wh, 4, [{t:'Fecha',w:16},{t:'Cliente',w:18},{t:'Número de OT',w:13},{t:'Ítem',w:13},{t:'Defecto',w:34,wrap:1},
-      {t:'Cantidad hallada',n:1,w:11,fmt:'#,##0'},{t:'Cantidad segregada',n:1,w:11,fmt:'#,##0'},{t:'Cantidad reacondicionada',n:1,w:13,fmt:'#,##0'},{t:'% del reporte',n:1,w:10,fmt:'0.00%'},{t:'ID reporte',w:14}],
+      {t:'Cantidad hallada',n:1,w:11,fmt:'#,##0'},{t:'Cantidad segregada',n:1,w:11,fmt:'#,##0'},{t:'Cantidad reacondicionada',n:1,w:13,fmt:'#,##0'},{t:'Tasa del reporte',n:1,w:10,fmt:'0.00%'},{t:'ID reporte',w:14}],
       hall.length ? hall : [['','','','','Sin defectos en los reportes filtrados','','','','','']]);
     xlPie(wh);
+
+    // ── 5b) Tiempo estimado de segregación / reacondicionamiento ──
+    const unidadPrevia = H.tu; H.tu = 'min'; // en el Excel siempre minutos de reloj (las horas-persona van en su columna)
+    const tdatos = construirTiempos();
+    if(tdatos.rows.length){
+      const saveT = H.tdata; H.tdata = tdatos; const DT = tDatos();
+      const wq = wb.addWorksheet('Tiempos', { properties:{ tabColor:{argb:'FFEB6834'} } });
+      xlTitulo(wq, `Tiempo estimado de segregación y reacondicionamiento — ${cliente}`, `Por ítem, producto y defecto  ·  minutos de reloj estimados a partir de la hora de captura de los reportes  ·  ${fmt(tdatos.rep.ok)} de ${fmt(tdatos.rep.total)} reportes con tiempo estimable`, 10);
+      let fq = 4;
+      if(DT.uso.length){ xlImagen(wb, wq, graficaComoImagen(cfgTUso(DT.uso, 12), 1000, 340), 0, fq-1, 1000*0.8, 340*0.8); fq += 15; }
+      if(DT.serie.length){ xlImagen(wb, wq, graficaComoImagen(cfgTSerie(DT.serie, 12), 1000, 340), 0, fq-1, 1000*0.8, 340*0.8); fq += 15; }
+      if(DT.porDefecto.some(o=>o.total>0)){ xlImagen(wb, wq, graficaComoImagen(cfgTBarrasH(DT.porDefecto, 12, o=>DT.cor(o.k)), 1000, 380), 0, fq-1, 1000*0.8, 380*0.8); fq += 17; }
+      xlTabla(wq, fq, [
+        {t:'Ítem',w:14},{t:'Producto',w:34,wrap:1},{t:'Defecto',w:30,wrap:1},
+        {t:'Bolsas segregadas',n:1,w:11,fmt:'#,##0'},{t:'Min segregando (est.)',n:1,w:12,fmt:'#,##0'},
+        {t:'Bolsas reacondicionadas',n:1,w:13,fmt:'#,##0'},{t:'Min reacondicionando (est.)',n:1,w:13,fmt:'#,##0'},
+        {t:'Tiempo total (min)',n:1,w:12,fmt:'#,##0'},{t:'Min por bolsa tratada',n:1,w:12,fmt:'0.00'}
+      ], DT.resumen.map(o=>[o.item,o.producto,o.defecto,o.segQ,o.segMin,o.reaQ,o.reaMin,o.total,o.rate]));
+      wq.views = [{ showGridLines:false }];
+      xlPie(wq);
+      // Uso de cada turno
+      const wu = wb.addWorksheet('Tiempos por turno', { properties:{ tabColor:{argb:'FFEB6834'} } });
+      xlTitulo(wu, `Uso de cada turno en segregación / reacondicionamiento — ${cliente}`, 'T1 07–15 h (8 h) · T2 15–22 h (7 h) · T3 22–07 h (9 h)  ·  % del turno = tiempo estimado ÷ horas del turno', 9);
+      xlTabla(wu, 4, [
+        {t:'Fecha turno',w:14},{t:'Turno',w:8},{t:'Reportes con seg./reac.',n:1,w:13,fmt:'#,##0'},{t:'Con tiempo estimable',n:1,w:12,fmt:'#,##0'},
+        {t:'Min segregando',n:1,w:12,fmt:'#,##0'},{t:'Min reacondicionando',n:1,w:13,fmt:'#,##0'},{t:'Tiempo total (min)',n:1,w:12,fmt:'#,##0'},
+        {t:'Horas del turno',n:1,w:10,fmt:'0'},{t:'% del turno',n:1,w:10,fmt:'0.0%'}
+      ], DT.uso.slice().reverse().map(o=>[etiquetaPeriodo(o.fecha,'dia',true), o.turno, o.rep, o.ok, o.segRaw, o.reaRaw, o.total, o.horas, o.pct]));
+      xlPie(wu);
+      H.tdata = saveT;
+    }
+    const wtd = wb.addWorksheet('Tiempos detalle', { properties:{ tabColor:{argb:'FFEB6834'} } });
+    xlTitulo(wtd, `Tiempos estimados por día y turno — ${cliente}`, 'Un renglón por hallazgo con segregación o reacondicionamiento (listo para tablas dinámicas)  ·  Horas-persona = minutos × personas presentes ÷ 60', 15);
+    xlTabla(wtd, 4, [
+      {t:'Fecha',w:12},{t:'Fecha turno',w:12},{t:'Turno',w:8},{t:'Cliente',w:18},{t:'OT',w:13},{t:'Ítem',w:13},{t:'Producto',w:30,wrap:1},{t:'Defecto',w:28,wrap:1},
+      {t:'Bolsas segregadas',n:1,w:11,fmt:'#,##0'},{t:'Min segregando (est.)',n:1,w:12,fmt:'#,##0.0'},{t:'Bolsas reacondicionadas',n:1,w:13,fmt:'#,##0'},{t:'Min reacondicionando (est.)',n:1,w:13,fmt:'#,##0.0'},
+      {t:'Tiempo total (min)',n:1,w:12,fmt:'#,##0.0'},{t:'Estado del tiempo',w:18},{t:'Personas presentes',n:1,w:10,fmt:'0'},{t:'Horas-persona',n:1,w:11,fmt:'0.0'}
+    ], tdatos.rows.map(r=>[ r.fecha?claveDia(r.fecha):'', r.fechaTurno?claveDia(r.fechaTurno):'', r.turno, r.cliente, r.ot, r.item, r.producto, r.defecto,
+      r.segQ, r.segMin, r.reaQ, r.reaMin, r.segMin+r.reaMin, ESTADO_TXT[r.estado]||r.estado, r.personas, (r.segMin+r.reaMin)*r.personas/60 ]));
+    xlPie(wtd);
+    H.tu = unidadPrevia;
 
     // ── 6) Notas ──
     const wn = wb.addWorksheet('Notas', { properties:{ tabColor:{argb:XL.gris} } });
@@ -1690,17 +1989,21 @@ async function exportarHistoricoExcel(){
     xlTitulo(wn, 'Método y referencias', 'Cómo se calcula cada indicador de este archivo', 2);
     const notas = [
       ['Método', null, true],
-      ['% defectivo = bolsas con defecto ÷ bolsas inspeccionadas del periodo.'],
-      ['Carta p′ de Laney: con lotes de miles de bolsas la carta p clásica da límites casi pegados a la media (todo saldría "fuera de control"). Laney corrige esa sobredispersión con σz = promedio de rangos móviles de z ÷ 1.128.'],
-      ['Límites: LCS/LCI = p̄ ± 3·σi·σz, con σi = √(p̄(1−p̄)/n) del periodo. ◆ = periodo fuera de control (causa especial a investigar).'],
+      ['Defectos detectados: cada defecto registrado cuenta como una ocurrencia; una misma bolsa puede tener varios defectos, por lo que la suma puede superar las bolsas inspeccionadas.'],
+      ['Tasa de defectos = defectos detectados ÷ bolsas inspeccionadas del periodo (defectos por unidad; ×100 = defectos por cada 100 bolsas).'],
+      ['Carta u′ de Laney: la carta u mide defectos por unidad. Con lotes de miles de bolsas la carta u clásica da límites casi pegados a la media (todo saldría "fuera de control"); Laney corrige esa sobredispersión con σz = promedio de rangos móviles de z ÷ 1.128.'],
+      ['Límites: LCS/LCI = ū ± 3·σi·σz, con σi = √(ū/n) del periodo. ◆ = periodo fuera de control (causa especial a investigar).'],
+      ['Liberadas + rechazadas debe ser igual a las bolsas inspeccionadas; los periodos donde no cuadra se señalan en el resumen.'],
+      ['Tiempos (estimados): no se capturan minutos; se calculan con la hora de captura de los reportes. Tiempo de un reporte = minutos desde el reporte anterior del mismo turno y cliente (el primero del turno cuenta desde el inicio del turno). Menos de 3 min = captura en bloque (no estimable); más del tope (120 min por defecto) = descanso/paro/captura tardía (descartado).'],
+      ['Solo se consideran reportes con bolsas segregadas o reacondicionadas; su tiempo se reparte entre sus defectos en proporción a las bolsas segregadas + reacondicionadas. Es una estimación: el intervalo incluye también la inspección del lote. Horas-persona = minutos × personas presentes ÷ 60. % del turno = tiempo estimado ÷ horas del turno (T1 8 h, T2 7 h, T3 9 h).'],
       ['Turnos: T1 07–15 h, T2 15–22 h, T3 22–07 h. El T3 cuenta para el día en que inició. La hora es la de captura del reporte.'],
       ['Atípicos por turno: regla de Tukey (más de Q3 + 1.5·RIC). Se usa la mediana como valor típico porque no se distorsiona con turnos capturados en bloque.'],
       [null],
       ['Referencias', null, true],
-      ['Laney, D. B. (2002). Improved control charts for attributes. Quality Engineering, 14(4), 531–537.', 'https://doi.org/10.1081/QEN-120001878'],
-      ['Montgomery, D. C. (2019). Introduction to Statistical Quality Control (8.ª ed.). Wiley — cartas de control por atributos.', null],
+      ['Laney, D. B. (2002). Improved control charts for attributes. Quality Engineering, 14(4), 531–537 (cartas p′ y u′).', 'https://doi.org/10.1081/QEN-120001878'],
+      ['Montgomery, D. C. (2019). Introduction to Statistical Quality Control (8.ª ed.). Wiley — cartas de control por atributos (p, np, c, u).', null],
       ['Tukey, J. W. (1977). Exploratory Data Analysis. Addison-Wesley — regla de 1.5·RIC para atípicos.', null],
-      ['NIST/SEMATECH e-Handbook of Statistical Methods — cartas p y detección de atípicos.', 'https://www.itl.nist.gov/div898/handbook/']
+      ['NIST/SEMATECH e-Handbook of Statistical Methods — cartas u y detección de atípicos.', 'https://www.itl.nist.gov/div898/handbook/']
     ];
     notas.forEach((n,i)=>{
       const r = wn.getRow(4+i), a = r.getCell(1);
@@ -1757,6 +2060,7 @@ async function exportarHistoricoExcel(){
     <div class="hist-tabs" role="tablist">
       <button type="button" data-t="periodo" class="on">📈 Por periodo</button>
       <button type="button" data-t="turno">🕐 Por turno</button>
+      <button type="button" data-t="tiempos">⏱️ Tiempo seg./reac.</button>
       <button type="button" data-t="reportes">📋 Reportes</button>
     </div>
     <div class="hist-cuerpo">
@@ -1770,12 +2074,12 @@ async function exportarHistoricoExcel(){
           <div class="hist-chart"><canvas id="hc-barras"></canvas></div>
         </div>
         <div class="hist-card">
-          <h3>% defectivo — carta de control p′ (Laney)</h3>
-          <p class="hint">Bolsas con defecto ÷ bolsas inspeccionadas. Límites ajustados por tamaño de lote y sobredispersión. ◆ = periodo fuera de control (causa especial a investigar).</p>
+          <h3>Tasa de defectos — carta de control u′ (Laney)</h3>
+          <p class="hint">Defectos detectados ÷ bolsas inspeccionadas (una bolsa puede tener varios defectos, por eso puede pasar de 100 %). Límites ajustados por tamaño de lote y sobredispersión. ◆ = periodo fuera de control (causa especial a investigar).</p>
           <div class="hist-chart" style="height:280px;"><canvas id="hc-carta"></canvas></div>
           <div class="hist-leyenda">
-            <span><i style="width:16px;height:3px;background:#2a78d6;"></i>% defectivo</span>
-            <span><i style="width:16px;height:2px;background:#1A2B3C;"></i>Media p̄</span>
+            <span><i style="width:16px;height:3px;background:#2a78d6;"></i>Tasa de defectos</span>
+            <span><i style="width:16px;height:2px;background:#1A2B3C;"></i>Media ū</span>
             <span><i style="width:16px;border-top:2px dashed #8A9BAD;"></i>Límites de control (±3σ)</span>
             <span style="color:var(--error);"><i style="width:9px;height:9px;background:var(--error);transform:rotate(45deg);"></i>Fuera de control</span>
           </div>
@@ -1787,7 +2091,7 @@ async function exportarHistoricoExcel(){
             <table class="tabla-h" id="tabla-periodo">
               <thead><tr>
                 <th data-k="k">Fecha ▼</th><th class="n" data-k="rep">Reportes</th><th class="n" data-k="nOt">OT</th>
-                <th class="n" data-k="insp">Inspeccionadas</th><th class="n" data-k="def">Con defecto</th><th class="n" data-k="p">% defectivo</th>
+                <th class="n" data-k="insp">Inspeccionadas</th><th class="n" data-k="def">Defectos</th><th class="n" data-k="p">Tasa de defectos</th>
                 <th class="n" data-k="rech">Rechazadas</th><th class="n" data-k="pr">% rechazo</th><th data-k="top">Defecto principal</th>
               </tr></thead>
               <tbody></tbody>
@@ -1829,13 +2133,101 @@ async function exportarHistoricoExcel(){
         </div>
       </div>
 
+      <!-- ── Tiempo estimado de segregación / reacondicionamiento ── -->
+      <div class="hist-panel" id="hp-tiempos">
+        <div class="t-controles">
+          <div class="f"><span class="lbl">Ver por</span>
+            <div class="seg" id="ht-vista" role="group" aria-label="Ver por"><button type="button" data-v="periodo" class="on">Por día</button><button type="button" data-v="turno">Por turno</button></div></div>
+          <div class="f"><span class="lbl">Unidad de tiempo</span>
+            <div class="seg" id="ht-unidad" role="group" aria-label="Unidad"><button type="button" data-u="min" class="on">Minutos</button><button type="button" data-u="hp">Horas-persona</button></div></div>
+          <div class="f"><span class="lbl">Descartar intervalos mayores a</span>
+            <select id="ht-cap" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13.5px;font-family:inherit;min-height:38px;background:#fff;">
+              <option value="60">60 min</option><option value="90">90 min</option><option value="120" selected>120 min</option><option value="180">180 min</option><option value="240">240 min</option>
+            </select></div>
+        </div>
+        <div class="hist-aviso" style="background:#EAF3FB;border-color:#C8DEF0;color:#1A2B3C;">ℹ️ <b>Tiempo estimado con lo ya reportado</b> (no se capturan minutos): el tiempo de cada reporte es el intervalo desde el reporte anterior del mismo turno y cliente (el primero cuenta desde el inicio del turno). Solo cuentan los reportes con segregación o reacondicionamiento y su tiempo se reparte entre sus defectos según las bolsas tratadas. Incluye también la inspección del lote, así que es una <b>estimación</b> (tiende a quedar por arriba). Los reportes capturados en bloque o con huecos largos no suman tiempo.</div>
+        <div id="ht-vacio" class="hist-vacio" style="display:none;">No hay segregación ni reacondicionamiento en los reportes filtrados.</div>
+        <div id="ht-contenido">
+          <div class="hk-grid" id="ht-kpis"></div>
+          <div id="ht-aviso"></div>
+          <div class="hist-card">
+            <h3>Uso de cada turno</h3>
+            <p class="hint">Qué porcentaje de las horas del turno (T1 8 h · T2 7 h · T3 9 h) se fue en segregar y reacondicionar. Pasa el cursor sobre una barra para ver las horas y cuántos reportes tuvieron tiempo estimable.</p>
+            <div class="hist-chart" style="height:260px;"><canvas id="ht-uso"></canvas></div>
+          </div>
+          <div class="hist-card">
+            <h3>Tiempo dedicado en el tiempo</h3>
+            <p class="hint">Tiempo estimado de segregación y de reacondicionamiento acumulado por día/semana/mes o por turno. "Horas-persona" multiplica por el número de personas presentes en cada reporte.</p>
+            <div class="hist-chart" style="height:280px;"><canvas id="ht-serie"></canvas></div>
+          </div>
+          <div class="grid-t2">
+            <div class="hist-card">
+              <h3>Tiempo por defecto</h3>
+              <p class="hint">Los 10 defectos que más tiempo consumen (segregación + reacondicionamiento).</p>
+              <div class="hist-chart" style="height:330px;"><canvas id="ht-defecto"></canvas></div>
+            </div>
+            <div class="hist-card">
+              <h3>Tiempo por ítem y producto</h3>
+              <p class="hint">Los 10 productos (ítem · nombre) con mayor tiempo dedicado.</p>
+              <div class="hist-chart" style="height:330px;"><canvas id="ht-producto"></canvas></div>
+            </div>
+          </div>
+          <div class="grid-t2">
+            <div class="hist-card">
+              <h3>Eficiencia: minutos por bolsa tratada</h3>
+              <p class="hint">Minutos de reloj por cada bolsa segregada o reacondicionada, por defecto. Un defecto con más minutos por bolsa es más costoso de resolver.</p>
+              <div class="hist-chart" style="height:330px;"><canvas id="ht-tasa"></canvas></div>
+            </div>
+            <div class="hist-card">
+              <h3>Reparto del tiempo por turno</h3>
+              <p class="hint">Qué turno concentra el tiempo de segregación y reacondicionamiento.</p>
+              <div class="hist-chart" style="height:330px;"><canvas id="ht-turno"></canvas></div>
+            </div>
+          </div>
+          <div class="hist-card">
+            <h3>Resumen por tipo de turno</h3>
+            <div class="tabla-scroll-h"><table class="tabla-h" id="tabla-t-tipos"><thead><tr>
+              <th>Turno</th><th class="n">Turnos con seg./reac.</th><th class="n">Tiempo total</th><th class="n">Promedio por turno</th><th class="n">% promedio del turno</th>
+            </tr></thead><tbody></tbody></table></div>
+          </div>
+          <div class="hist-card">
+            <h3>Tiempo de cada turno</h3>
+            <div class="tabla-scroll-h"><table class="tabla-h" id="tabla-t-turnos"><thead><tr>
+              <th>Fecha turno</th><th>Turno</th><th class="n">Reportes con seg./reac.</th><th class="n">Con tiempo estimable</th><th class="n">Segregando</th><th class="n">Reacondicionando</th><th class="n">Tiempo total</th><th class="n">Horas del turno</th><th class="n">% del turno</th>
+            </tr></thead><tbody></tbody></table></div>
+          </div>
+          <div class="hist-card">
+            <h3>Resumen por ítem, producto y defecto</h3>
+            <p class="hint">Ordenado por tiempo total estimado. Min/bolsa en minutos de reloj, solo con reportes de tiempo estimable.</p>
+            <div class="tabla-scroll-h movil-cards">
+              <table class="tabla-h" id="tabla-t-resumen"><thead><tr>
+                <th>Ítem</th><th>Producto</th><th>Defecto</th><th class="n">Bolsas segregadas</th><th class="n">Tiempo segregando</th>
+                <th class="n">Bolsas reacond.</th><th class="n">Tiempo reacond.</th><th class="n">Tiempo total</th><th class="n">Min/bolsa</th>
+              </tr></thead><tbody></tbody></table>
+            </div>
+            <div class="hcards" id="cards-t-resumen"></div>
+          </div>
+          <div class="hist-card">
+            <h3>Detalle por <span id="th-per-titulo">día o turno</span></h3>
+            <p class="hint" id="ht-detalle-nota"></p>
+            <div class="tabla-scroll-h movil-cards">
+              <table class="tabla-h" id="tabla-t-detalle"><thead><tr>
+                <th id="th-per">Día</th><th>Ítem</th><th>Producto</th><th>Defecto</th><th class="n">Bolsas segregadas</th><th class="n">Tiempo segregando</th>
+                <th class="n">Bolsas reacond.</th><th class="n">Tiempo reacond.</th><th class="n">Tiempo total</th><th class="n">Min/bolsa</th>
+              </tr></thead><tbody></tbody></table>
+            </div>
+            <div class="hcards" id="cards-t-detalle"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── Reportes ── -->
       <div class="hist-panel" id="hp-reportes">
         <div class="hist-card" style="padding:0;overflow:hidden;">
           <div class="tabla-scroll-h movil-cards">
             <table class="tabla-h" id="tabla-reportes"><thead><tr>
               <th>Fecha</th><th>Cliente</th><th>OT</th><th>Ítem</th><th>Producto</th><th>Lugar de servicio</th>
-              <th class="n">Revisadas</th><th class="n">Con defecto</th><th class="n">% defecto</th><th class="n">Liberadas</th><th class="n">Rechazadas</th>
+              <th class="n">Revisadas</th><th class="n">Defectos</th><th class="n">Tasa de defectos</th><th class="n">Liberadas</th><th class="n">Rechazadas</th>
               <th>Defectos</th><th>Personal</th><th>Observaciones</th>
             </tr></thead><tbody></tbody></table>
           </div>

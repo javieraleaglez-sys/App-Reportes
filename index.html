@@ -70,12 +70,20 @@
     .btn-green:hover{background:#145228;}
     .btn-wa{background:var(--wa);color:#fff;}
     .btn-wa:hover{background:#1ebe5d;}
-    /* 🔒 Seguridad de administrador ACTIVA: estos botones quedan ocultos hasta
-       que se desbloquee con la clave (ver verificarClave). */
+    /* 🔒 Los botones de administrador quedan ocultos hasta que el servidor
+       confirme la clave (ver verificarClave). */
     #btn-excel, #btn-catalogos, #btn-historial { display:none !important; }
     #btn-excel.admin-visible, #btn-catalogos.admin-visible, #btn-historial.admin-visible { display:inline-flex !important; }
     #success-msg{display:none;background:#EAFAF1;border:1.5px solid #27AE60;color:var(--success);padding:14px 18px;border-radius:8px;font-size:14px;font-weight:500;margin-top:20px;text-align:center;}
+    #success-msg.msg-error{background:#FDEDEC;border-color:#F5B7B1;color:var(--error);}
+    #success-msg.msg-aviso{background:#FEF6E7;border-color:#F5D48A;color:#8A6116;}
     #loading-msg{display:none;background:var(--accent);border:1.5px solid var(--primary);color:var(--primary);padding:14px 18px;border-radius:8px;font-size:14px;font-weight:500;margin-top:20px;text-align:center;}
+    /* Aviso de envíos pendientes / rechazados */
+    #estado-cola{display:none;max-width:680px;margin:0 auto 12px;border-radius:10px;padding:12px 16px;font-size:13px;line-height:1.5;border:1.5px solid #F5D48A;background:#FEF6E7;color:#8A6116;}
+    #estado-cola.cola-error{background:#FDEDEC;border-color:#F5B7B1;color:var(--error);}
+    #estado-cola .cola-linea{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between;}
+    #estado-cola .cola-btn{border:1.5px solid currentColor;background:transparent;color:inherit;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    #estado-cola .cola-detalle{margin-top:8px;padding-top:8px;border-top:1px dashed currentColor;font-size:12px;overflow-wrap:anywhere;}
     .graficas-section{max-width:680px;margin:24px auto 0;}
     .graficas-header{background:var(--primary);border-radius:var(--radius) var(--radius) 0 0;padding:18px 32px;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
     .graficas-header h2{font-size:16px;font-weight:700;margin:0;}
@@ -267,6 +275,7 @@
   </style>
 </head>
 <body>
+<div id="estado-cola" role="status" aria-live="polite"></div>
 <div class="wrapper">
   <div class="header app-header">
     <img src="https://static.wixstatic.com/media/c78b4a_6df1a1ec619645b89210a1487fa416e1~mv2.png"
@@ -290,11 +299,11 @@
       <div style="font-size:32px;text-align:center;margin-bottom:12px;">🔒</div>
       <h3 style="text-align:center;font-size:16px;color:#1A2B3C;margin-bottom:6px;">Acceso administrador</h3>
       <p style="text-align:center;font-size:13px;color:#5A7185;margin-bottom:20px;">Ingresa la clave para mostrar las opciones avanzadas.</p>
-      <input id="input-clave" type="password" placeholder="Clave de acceso" style="width:100%;padding:10px 13px;border:1.5px solid #C8D8E8;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;outline:none;margin-bottom:8px;" onkeydown="if(event.key==='Enter')verificarClave()" />
+      <input id="input-clave" type="password" placeholder="Clave de acceso" autocomplete="off" style="width:100%;padding:10px 13px;border:1.5px solid #C8D8E8;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;outline:none;margin-bottom:8px;" onkeydown="if(event.key==='Enter')verificarClave()" />
       <p id="clave-error" style="color:#C0392B;font-size:12px;display:none;margin-bottom:8px;">❌ Clave incorrecta, intenta de nuevo.</p>
       <div style="display:flex;gap:10px;margin-top:4px;">
         <button onclick="cerrarModal()" style="flex:1;padding:10px;border:1.5px solid #C8D8E8;border-radius:7px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;color:#5A7185;">Cancelar</button>
-        <button onclick="verificarClave()" style="flex:1;padding:10px;border:none;border-radius:7px;background:#005B96;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Entrar</button>
+        <button id="btn-entrar-clave" onclick="verificarClave()" style="flex:1;padding:10px;border:none;border-radius:7px;background:#005B96;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Entrar</button>
       </div>
     </div>
   </div>
@@ -421,7 +430,7 @@
       <div class="section-title">Hallazgos</div>
       <div class="field">
         <label>Defectos detectados <span class="req">*</span></label>
-        <p class="hint" style="margin-top:0;margin-bottom:10px;">Agrega cada defecto por separado. Si no hay hallazgos, elige "SIN DEFECTOS" y deja la cantidad hallada en 0.</p>
+        <p class="hint" style="margin-top:0;margin-bottom:10px;">Agrega cada defecto por separado. Una misma bolsa puede tener varios defectos: cuenta cada defecto en su propio renglón. Si no hay hallazgos, elige "SIN DEFECTOS" y deja la cantidad hallada en 0.</p>
         <select id="defecto_nombre" style="margin-bottom:8px;">
           <option value="">-- Selecciona un defecto --</option>
         </select>
@@ -445,7 +454,7 @@
         <div id="defectos-lista" style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
           <p class="hint" style="margin:0;">Aún no has agregado ningún hallazgo.</p>
         </div>
-        <p class="hint" id="defectos-total" style="margin-top:8px;font-weight:600;color:var(--text);">Total bolsas con defecto: 0</p>
+        <p class="hint" id="defectos-total" style="margin-top:8px;font-weight:600;color:var(--text);">Total defectos detectados: 0</p>
       </div>
 
       <div class="section-title">Resultado Final</div>
@@ -461,6 +470,7 @@
           <p class="hint">Escribir "0" si no hay rechazos.</p>
         </div>
       </div>
+      <p class="hint" style="margin:-8px 0 10px;">Liberadas + rechazadas debe ser <strong>igual</strong> a las bolsas revisadas.</p>
       <div id="balance-cantidades" style="display:none;margin:-8px 0 20px;padding:10px 14px;border-radius:7px;font-size:13px;font-weight:500;"></div>
 
       <div class="section-title">Evidencias fotográficas</div>
@@ -498,7 +508,7 @@
         </button>
         <span id="counter"></span>
       </div>
-      <div id="edicion-aviso" style="display:none;background:#FEF6E7;border:1.5px solid #F5D48A;color:#8A6116;padding:12px 16px;border-radius:8px;font-size:13.5px;font-weight:600;margin-top:14px;">✏️ Estás editando un reporte existente. Al guardar, se actualiza en la base de datos (no se crea uno nuevo).</div>
+      <div id="edicion-aviso" style="display:none;background:#FEF6E7;border:1.5px solid #F5D48A;color:#8A6116;padding:12px 16px;border-radius:8px;font-size:13.5px;font-weight:600;margin-top:14px;">✏️ Estás editando un reporte existente. Al guardar, se actualiza en la base de datos (no se crea uno nuevo). Las fotos que ya tenía se conservan; solo se agregan las nuevas que subas.</div>
       <div id="loading-msg">⏳ Un momento...</div>
       <div id="success-msg">✅ Reporte guardado correctamente.</div>
     </form>
@@ -556,11 +566,11 @@
       <div class="chart-wrap" id="wrap-rechazo"><canvas id="chart-rechazo" role="img" aria-label="Gráfica de bolsas rechazadas y liberadas por OT">Comparativo de rechazos y liberaciones por orden de trabajo.</canvas></div>
     </div>
 
-    <!-- Gráfica 2: % defecto por OT -->
+    <!-- Gráfica 2: tasa de cada defecto por OT -->
     <div class="grafica-bloque" id="bloque-defecto">
-      <div class="grafica-titulo">Porcentaje de cada tipo de defecto por OT</div>
+      <div class="grafica-titulo">Tasa de cada tipo de defecto por OT (defectos por cada 100 bolsas revisadas)</div>
       <div class="legend-row" id="legend-defecto"></div>
-      <div class="chart-wrap" id="wrap-defecto"><canvas id="chart-defecto" role="img" aria-label="Porcentaje de defecto por OT">Distribución de defectos por orden de trabajo.</canvas></div>
+      <div class="chart-wrap" id="wrap-defecto"><canvas id="chart-defecto" role="img" aria-label="Tasa de defectos por OT">Distribución de defectos por orden de trabajo.</canvas></div>
     </div>
 
     <!-- Gráfica 3: Distribución de defectos (dona) -->
@@ -576,10 +586,17 @@
 <script>
 const STORAGE_KEY = 'flexigrip_reportes';
 const ULTIMO_KEY = 'flexigrip_ultimo_reporte';
+const APP_VERSION = 2; // versión del protocolo con el backend (Code.gs v2)
 let adminDesbloqueado = false;
+let adminToken = null;   // clave de administrador: solo en memoria, nunca se guarda ni viaja en el código
 let imageFiles = [];
 let defectosList = [];
 let enviosEnCurso = 0; // para avisar si el técnico sale a WhatsApp antes de que termine el envío
+
+// ── Escape de HTML: TODO texto que venga del usuario o de la base de datos
+// y se pinte con innerHTML pasa por aquí (evita inyección de código). ─────
+function escHtml(t){ return String(t==null?'':t).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const esc = escHtml;
 
 // ── Detección de dispositivo ──────────────────────────────────────────────
 // iPadOS se identifica como "Mac", por eso se revisa también maxTouchPoints.
@@ -591,7 +608,7 @@ const ES_MOVIL = ES_IOS || ES_ANDROID;
 // ALMACENAMIENTO LOCAL GRANDE (IndexedDB)
 // localStorage en iPhone/Safari solo admite ~5 MB: con 2–3 fotos de
 // iPhone se llenaba y el reporte fallaba al guardar. Las fotos y la cola
-// de envíos pendientes ahora viven en IndexedDB (cientos de MB).
+// de envíos pendientes viven en IndexedDB (cientos de MB).
 // ══════════════════════════════════════════════════════════════════
 const IDB_NAME = 'flexigrip_db', IDB_VER = 1;
 let _idbPromise = null;
@@ -628,17 +645,35 @@ const idbClear = (s)=> idbTx(s,'readwrite', st=>st.clear());
 // ══════════════════════════════════════════════════════════════════
 // CONEXIÓN A LA BASE DE DATOS (Google Sheet vía Apps Script)
 // ══════════════════════════════════════════════════════════════════
-// Pega aquí la URL "/exec" que te da Google al implementar el backend
-// (ver instrucciones al inicio del archivo Code.gs).
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwuGDWR7XrwZe7b8j22ioYC7Arvs2KYdD9ZcUisEIFBJw1Vj23bk5mXCEmf4vsaah83bA/exec';
 
-// Cola de envíos pendientes: en IndexedDB (con respaldo en localStorage).
+// POST con tiempo límite (evita que un envío se quede colgado para siempre)
+async function postJSON(payload, timeoutMs){
+  const ctrl = new AbortController();
+  const t = setTimeout(()=> ctrl.abort(), timeoutMs || 90000);
+  try{
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' }, // evita preflight CORS con Apps Script
+      body: JSON.stringify(payload),
+      signal: ctrl.signal
+    });
+    return await res.json();
+  } finally { clearTimeout(t); }
+}
+
+// El backend responde con un "codigo" cuando el problema NO se arregla reintentando
+function esErrorDefinitivo(data){
+  return !!data && ['validacion','no_autorizado','accion_desconocida','app_desactualizada'].includes(data.codigo);
+}
+
+// ── Cola de envíos pendientes (IndexedDB, con respaldo en localStorage) ───
 const PENDIENTES_KEY = 'flexigrip_pendientes_envio';
+const MAX_INTENTOS = 12; // después de esto el reporte pasa a "no se pudo guardar" y se avisa
 async function getPendientes(){
   try{
     const v = await idbGet('kv','pendientes');
     if(Array.isArray(v)){
-      // Migración: si quedó una cola vieja en localStorage, se une a la de IndexedDB
       let viejos = [];
       try{ viejos = JSON.parse(localStorage.getItem(PENDIENTES_KEY))||[]; }catch{}
       return viejos.length ? v.concat(viejos) : v;
@@ -655,6 +690,19 @@ async function savePendientes(l){
   try{ localStorage.setItem(PENDIENTES_KEY, JSON.stringify(l)); return true; }
   catch(e){ console.warn('No se pudo guardar la cola de pendientes:', e); return false; }
 }
+// Reportes que el servidor rechazó de forma definitiva (o que agotaron sus intentos)
+async function getRechazados(){
+  try{ const v = await idbGet('kv','rechazados'); if(Array.isArray(v)) return v; }catch(e){}
+  return [];
+}
+async function saveRechazados(l){
+  try{ await idbSet('kv','rechazados', l); return true; }catch(e){ console.warn('No se pudo guardar la lista de rechazados:', e); return false; }
+}
+async function agregarARechazados(payload, error){
+  const r = await getRechazados();
+  r.push({ payload, error: String(error||'Rechazado'), fecha: new Date().toISOString() });
+  await saveRechazados(r);
+}
 // Evita que dos procesos lean/escriban la cola al mismo tiempo
 let _colaLock = Promise.resolve();
 function conCola(fn){
@@ -666,57 +714,66 @@ function agregarAPendientes(payload){
   return conCola(async ()=>{ const pend = await getPendientes(); pend.push(payload); await savePendientes(pend); });
 }
 
-// Envía un reporte al backend. Si falla (sin señal, URL no configurada,
-// etc.) lo guarda en una cola local y lo reintenta más tarde, sin
-// bloquear al técnico ni perder el reporte.
-async function enviarABaseDeDatos(payload){
+// Envía un reporte al backend. Si falla por conexión lo guarda en la cola y lo
+// reintenta; si el servidor lo rechaza de forma definitiva lo manda a "rechazados"
+// y se avisa al técnico. opciones.sinCola=true → no encolar (ediciones de administrador).
+async function enviarABaseDeDatos(payload, opciones){
+  opciones = opciones || {};
   if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('PEGAR_AQUI')){
     console.warn('APPS_SCRIPT_URL no configurada: el reporte solo quedó guardado en este dispositivo.');
-    await agregarAPendientes(payload);
+    if(!opciones.sinCola) await agregarAPendientes(payload);
     return { ok:false, motivo:'sin_configurar' };
   }
   enviosEnCurso++;
   try{
-    const res = await fetch(APPS_SCRIPT_URL, {
-      method:'POST',
-      headers:{ 'Content-Type':'text/plain;charset=utf-8' }, // evita preflight CORS con Apps Script
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if(!data.ok) throw new Error(data.error||'Error desconocido del backend');
-    return data;
+    const data = await postJSON(payload);
+    if(data.ok) return data;
+    if(esErrorDefinitivo(data)){
+      const msg = data.error || 'Rechazado por el servidor';
+      if(!opciones.sinCola) await agregarARechazados(payload, msg);
+      return { ok:false, motivo:'rechazado', error: msg };
+    }
+    throw new Error(data.error || 'Error desconocido del backend');
   }catch(err){
-    console.warn('No se pudo enviar a la base de datos, se guarda para reintentar:', err.message);
-    try{ await agregarAPendientes(payload); }catch(e){ console.warn(e); }
-    return { ok:false, motivo:'sin_conexion' };
+    console.warn('No se pudo enviar a la base de datos:', err && err.message);
+    if(!opciones.sinCola){ try{ await agregarAPendientes(payload); }catch(e){ console.warn(e); } }
+    return { ok:false, motivo:'sin_conexion', error: String(err && err.message || err) };
   }finally{
     enviosEnCurso = Math.max(0, enviosEnCurso-1);
+    actualizarEstadoCola();
   }
 }
 
-// Reintenta enviar los reportes pendientes (se llama al cargar la página
-// y cuando el dispositivo recupera conexión a internet).
+// Reintenta los reportes pendientes (al cargar, al recuperar internet, al volver a la app y cada 3 min).
 async function sincronizarPendientes(){
   if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('PEGAR_AQUI')) return;
   return conCola(async ()=>{
     const pend = await getPendientes();
-    if(!pend.length) return;
-    const restantes = [];
+    if(!pend.length){ actualizarEstadoCola(); return; }
+    const restantes = [], nuevosRechazados = [];
     for(const payload of pend){
       try{
-        const res = await fetch(APPS_SCRIPT_URL, {
-          method:'POST',
-          headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if(!data.ok) throw new Error(data.error||'Error');
+        const data = await postJSON(payload);
+        if(data.ok) continue; // enviado (o ya existía: el servidor no duplica)
+        if(esErrorDefinitivo(data)){
+          nuevosRechazados.push({ payload, error: data.error || 'Rechazado por el servidor', fecha: new Date().toISOString() });
+          continue;
+        }
+        throw new Error(data.error || 'Error');
       }catch(err){
-        restantes.push(payload); // sigue pendiente, se reintenta después
+        payload._intentos = (payload._intentos||0) + 1;
+        payload._ultimoError = String(err && err.message || err);
+        if(payload._intentos >= MAX_INTENTOS){
+          nuevosRechazados.push({ payload, error: 'No se pudo enviar tras varios intentos: ' + payload._ultimoError, fecha: new Date().toISOString() });
+        } else {
+          restantes.push(payload);
+        }
       }
     }
     await savePendientes(restantes);
+    if(nuevosRechazados.length){ const r = await getRechazados(); await saveRechazados(r.concat(nuevosRechazados)); }
     if(restantes.length < pend.length) updateUI();
+    actualizarEstadoCola();
   });
 }
 window.addEventListener('online', sincronizarPendientes);
@@ -725,13 +782,61 @@ window.addEventListener('load', ()=> setTimeout(sincronizarPendientes, 1500));
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') sincronizarPendientes(); });
 setInterval(sincronizarPendientes, 3*60*1000); // reintento cada 3 min por si acaso
 
+// ── Aviso visible: reportes pendientes / que no se pudieron guardar ───────
+let colaDetalleAbierto = false;
+async function actualizarEstadoCola(){
+  const box = document.getElementById('estado-cola');
+  if(!box) return;
+  let pend = [], rech = [];
+  try{ pend = await getPendientes(); rech = await getRechazados(); }catch(e){}
+  if(!pend.length && !rech.length){ box.style.display='none'; box.innerHTML=''; box.className=''; return; }
+  box.className = rech.length ? 'cola-error' : '';
+  box.style.display = 'block';
+  const textos = [];
+  if(pend.length) textos.push(`⏳ <b>${pend.length}</b> reporte(s) pendiente(s) de enviar a la base de datos (se reintenta solo).`);
+  if(rech.length) textos.push(`⛔ <b>${rech.length}</b> reporte(s) <b>NO se pudieron guardar</b> en la base de datos.`);
+  let html = `<div class="cola-linea"><span>${textos.join('<br>')}</span><span>`
+    + `<button type="button" class="cola-btn" data-cola="reintentar">Reintentar ahora</button> `
+    + (rech.length ? `<button type="button" class="cola-btn" data-cola="detalle">${colaDetalleAbierto?'Ocultar':'Ver detalle'}</button>` : '')
+    + `</span></div>`;
+  if(rech.length && colaDetalleAbierto){
+    html += '<div class="cola-detalle">' + rech.map((r,i)=>
+      `<div style="margin-bottom:8px;"><b>${esc(r.payload && r.payload.ot || '(sin OT)')}</b> · ${esc(r.payload && r.payload.cliente || '')} — ${esc(r.error)}<br>`
+      + `<button type="button" class="cola-btn" data-cola="reintentar-rech" data-i="${i}">Reintentar</button> `
+      + `<button type="button" class="cola-btn" data-cola="descartar" data-i="${i}">Descartar</button></div>`
+    ).join('') + '</div>';
+  }
+  box.innerHTML = html;
+}
+document.getElementById('estado-cola').addEventListener('click', async function(e){
+  const b = e.target.closest('[data-cola]');
+  if(!b) return;
+  const accion = b.dataset.cola, i = Number(b.dataset.i);
+  if(accion==='reintentar'){ b.disabled = true; await sincronizarPendientes(); }
+  else if(accion==='detalle'){ colaDetalleAbierto = !colaDetalleAbierto; }
+  else if(accion==='reintentar-rech'){
+    await conCola(async ()=>{
+      const rech = await getRechazados(); const [item] = rech.splice(i,1); await saveRechazados(rech);
+      if(item){ item.payload._intentos = 0; const pend = await getPendientes(); pend.push(item.payload); await savePendientes(pend); }
+    });
+    sincronizarPendientes();
+  }
+  else if(accion==='descartar'){
+    if(!confirm('¿Descartar este reporte? No se enviará a la base de datos y no se puede recuperar.')) return;
+    const rech = await getRechazados(); rech.splice(i,1); await saveRechazados(rech);
+  }
+  actualizarEstadoCola();
+});
+actualizarEstadoCola();
+
 // ── Validación EN VIVO del hallazgo que se está capturando (antes de agregarlo) ──
-// Reglas de coherencia por hallazgo:
-//  · Segregada + reacondicionada no puede superar lo hallado (no se puede
-//    procesar más bolsas de las que se encontraron con ese defecto).
-//  · Si el nombre no es "SIN DEFECTOS", debe traer una cantidad hallada > 0.
-//  · (Aviso) Sumar este hallazgo a los ya agregados no debería superar la
-//    cantidad total revisada del reporte, si ya está capturada.
+// Reglas por hallazgo:
+//  · Segregada + reacondicionada no puede superar lo hallado.
+//  · Si el nombre no es "SIN DEFECTOS", debe traer una cantidad hallada > 0
+//    para registrar segregada o reacondicionada.
+//  · "SIN DEFECTOS" no lleva cantidades.
+//  · NO hay tope contra las bolsas revisadas: una misma bolsa puede tener
+//    varios defectos y cada defecto se cuenta.
 function evaluarHallazgoActual(){
   const nombre = document.getElementById('defecto_nombre').value;
   const hallada = Number(document.getElementById('defecto_hallada').value)||0;
@@ -740,28 +845,19 @@ function evaluarHallazgoActual(){
   const box = document.getElementById('hallazgo-error');
   const btn = document.getElementById('btn-agregar-hallazgo');
 
-  let error = null, aviso = null;
-
-  if(segregada + reacondicionada > hallada){
+  let error = null;
+  if(nombre && nombre.toUpperCase()==='SIN DEFECTOS' && (hallada>0||segregada>0||reacondicionada>0)){
+    error = '"SIN DEFECTOS" no lleva cantidades. Déjalas en 0 o elige el defecto encontrado.';
+  } else if(segregada + reacondicionada > hallada){
     error = `Segregada + reacondicionada (${segregada+reacondicionada}) no puede ser mayor a la cantidad hallada (${hallada}).`;
   } else if(nombre && nombre.toUpperCase()!=='SIN DEFECTOS' && hallada===0 && (segregada>0||reacondicionada>0)){
     error = `Escribe la cantidad hallada de "${nombre}" antes de registrar segregada o reacondicionada.`;
-  } else {
-    const totalRevisado = Number(document.getElementById('cantidad_total').value)||0;
-    const sumaExistente = defectosList.reduce((s,d)=>s+(Number(d.hallada)||0),0);
-    if(totalRevisado>0 && (sumaExistente + hallada) > totalRevisado){
-      aviso = `Este hallazgo llevaría el total de bolsas con defecto a ${(sumaExistente+hallada).toLocaleString('es-MX')}, más de las ${totalRevisado.toLocaleString('es-MX')} revisadas. Verifica las cantidades.`;
-    }
   }
 
   if(error){
     box.style.display='block'; box.style.background='#FDEDEC'; box.style.color='var(--error)'; box.style.border='1.5px solid #F5B7B1';
     box.textContent = `⛔ ${error}`;
     btn.disabled = true;
-  } else if(aviso){
-    box.style.display='block'; box.style.background='#FEF6E7'; box.style.color='#8A6116'; box.style.border='1.5px solid #F5D48A';
-    box.textContent = `⚠️ ${aviso}`;
-    btn.disabled = false;
   } else {
     box.style.display='none';
     btn.disabled = false;
@@ -772,7 +868,6 @@ function evaluarHallazgoActual(){
   document.getElementById(id).addEventListener('input', evaluarHallazgoActual);
   document.getElementById(id).addEventListener('change', evaluarHallazgoActual);
 });
-document.getElementById('cantidad_total').addEventListener('input', evaluarHallazgoActual);
 
 // ── Hallazgos (lista de defectos con hallada / segregada / reacondicionada) ─
 function agregarDefecto(){
@@ -787,7 +882,7 @@ function agregarDefecto(){
   const reacondicionada = Number(reaInput.value) || 0;
 
   if(!nombre){ alert('Selecciona el defecto (o "SIN DEFECTOS").'); nombreSel.focus(); return; }
-  if(!evaluarHallazgoActual()){ return; } // el panel ya muestra el motivo, no hace falta un alert extra
+  if(!evaluarHallazgoActual()){ return; } // el panel ya muestra el motivo
 
   defectosList.push({ nombre, hallada, segregada, reacondicionada });
   nombreSel.value=''; hallInput.value=''; segInput.value=''; reaInput.value='';
@@ -809,13 +904,13 @@ function renderDefectosList(){
     cont.innerHTML = defectosList.map((d,idx)=>`
       <div style="background:var(--accent);border:1.5px solid var(--border);border-radius:7px;padding:8px 12px;font-size:13px;">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <strong>${d.nombre}</strong>
+          <strong>${esc(d.nombre)}</strong>
           <button type="button" class="remove-defecto" data-idx="${idx}" style="background:none;border:none;color:var(--error);font-size:14px;cursor:pointer;">✕</button>
         </div>
         <div style="display:flex;gap:14px;margin-top:4px;color:var(--muted);font-size:12px;flex-wrap:wrap;">
-          <span>Hallada: <strong style="color:var(--text);">${d.hallada}</strong></span>
-          <span>Segregada: <strong style="color:var(--text);">${d.segregada}</strong></span>
-          <span>Reacondicionada: <strong style="color:var(--text);">${d.reacondicionada}</strong></span>
+          <span>Hallada: <strong style="color:var(--text);">${esc(d.hallada)}</strong></span>
+          <span>Segregada: <strong style="color:var(--text);">${esc(d.segregada)}</strong></span>
+          <span>Reacondicionada: <strong style="color:var(--text);">${esc(d.reacondicionada)}</strong></span>
         </div>
       </div>`).join('');
     cont.querySelectorAll('.remove-defecto').forEach(btn=>{
@@ -823,7 +918,7 @@ function renderDefectosList(){
     });
   }
   const total = defectosList.reduce((s,d)=>s+d.hallada,0);
-  document.getElementById('defectos-total').textContent = `Total bolsas con defecto: ${total}`;
+  document.getElementById('defectos-total').textContent = `Total defectos detectados: ${total}`;
   if(typeof evaluarValidaciones === 'function') evaluarValidaciones();
 }
 
@@ -871,7 +966,7 @@ function getDefectosConocidos(){ return catalogosCache.Defecto || []; }
 function renderDefectosSelect(seleccionar){
   const sel = document.getElementById('defecto_nombre');
   const lista = getDefectosConocidos().slice().sort();
-  sel.innerHTML = '<option value="">-- Selecciona un defecto --</option>' + lista.map(d=>`<option value="${d}">${d}</option>`).join('');
+  sel.innerHTML = '<option value="">-- Selecciona un defecto --</option>' + lista.map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join('');
   if(seleccionar && lista.includes(seleccionar)) sel.value = seleccionar;
 }
 
@@ -880,7 +975,7 @@ let ultimoClienteSeleccionado = null;
 function renderClientesSelect(seleccionar){
   const sel = document.getElementById('cliente');
   const lista = getClientesConocidos().slice().sort();
-  sel.innerHTML = '<option value="">-- Selecciona un cliente --</option>' + lista.map(c=>`<option value="${c}">${c}</option>`).join('');
+  sel.innerHTML = '<option value="">-- Selecciona un cliente --</option>' + lista.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
   const valorAUsar = seleccionar || ultimoClienteSeleccionado;
   if(valorAUsar && lista.includes(valorAUsar)) sel.value = valorAUsar;
 }
@@ -896,12 +991,13 @@ if(document.readyState !== 'loading') sincronizarCatalogosDesdeServidor();
 
 
 // ── Panel de administrador: "Gestionar catálogos" (agregar/eliminar) ──────
-// Escribe directo en la pestaña "Catálogos" de la Sheet (vía Apps Script),
-// para que el cambio se vea en todos los dispositivos, no solo en este.
+// Escribe directo en la pestaña "Catálogos" de la Sheet (vía Apps Script).
+// Requiere la clave de administrador (adminToken), validada por el servidor.
 let catalogoActivo = 'clientes'; // 'clientes' | 'defectos' | 'lugares'
 const TIPO_POR_TAB = { clientes: 'Cliente', defectos: 'Defecto', lugares: 'LugarMaquina' };
 
 function abrirModalCatalogos(){
+  if(!adminToken){ alert('Primero entra como administrador (candado 🔒).'); return; }
   cambiarTabCatalogo('clientes');
   document.getElementById('modal-catalogos').style.display = 'flex';
 }
@@ -930,7 +1026,7 @@ function cambiarTabCatalogo(tab){
     const clientes = getClientesConocidos().slice().sort();
     const actual = sel.value;
     sel.innerHTML = clientes.length
-      ? clientes.map(c=>`<option value="${c}">${c}</option>`).join('')
+      ? clientes.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')
       : '<option value="">-- Agrega un cliente primero --</option>';
     if(clientes.includes(actual)) sel.value = actual;
   } else {
@@ -957,8 +1053,8 @@ function renderCatalogoLista(){
   }
   cont.innerHTML = lista.map(item=>`
     <div style="display:flex;justify-content:space-between;align-items:center;background:var(--accent);border:1.5px solid var(--border);border-radius:7px;padding:8px 12px;font-size:13px;">
-      <span>${item}</span>
-      <button type="button" class="btn-quitar-catalogo" data-item="${item.replace(/"/g,'&quot;')}" style="background:none;border:none;color:var(--error);font-size:14px;cursor:pointer;">✕</button>
+      <span>${esc(item)}</span>
+      <button type="button" class="btn-quitar-catalogo" data-item="${esc(item)}" style="background:none;border:none;color:var(--error);font-size:14px;cursor:pointer;">✕</button>
     </div>`).join('');
   cont.querySelectorAll('.btn-quitar-catalogo').forEach(btn=>{
     btn.addEventListener('click', ()=> eliminarItemCatalogo(btn.dataset.item));
@@ -973,12 +1069,7 @@ async function agregarItemCatalogo(){
   if(catalogoActivo==='lugares' && !clienteLugar){ alert('Elige primero a qué cliente pertenece.'); return; }
   input.disabled = true;
   try{
-    const res = await fetch(APPS_SCRIPT_URL, {
-      method:'POST',
-      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-      body: JSON.stringify({ accion:'agregar_catalogo', tipo, valor:nombre, cliente:clienteLugar })
-    });
-    const data = await res.json();
+    const data = await postJSON({ accion:'agregar_catalogo', tipo, valor:nombre, cliente:clienteLugar, token:adminToken, v:APP_VERSION }, 30000);
     if(!data.ok) throw new Error(data.error || 'Error desconocido del servidor');
     if(tipo==='LugarMaquina'){
       if(!catalogosCache.LugarMaquina[clienteLugar]) catalogosCache.LugarMaquina[clienteLugar] = [];
@@ -1004,12 +1095,7 @@ async function eliminarItemCatalogo(nombre){
   const tipo = TIPO_POR_TAB[catalogoActivo];
   const clienteLugar = catalogoActivo==='lugares' ? document.getElementById('catalogo-cliente-lugares').value : null;
   try{
-    const res = await fetch(APPS_SCRIPT_URL, {
-      method:'POST',
-      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-      body: JSON.stringify({ accion:'eliminar_catalogo', tipo, valor:nombre, cliente:clienteLugar })
-    });
-    const data = await res.json();
+    const data = await postJSON({ accion:'eliminar_catalogo', tipo, valor:nombre, cliente:clienteLugar, token:adminToken, v:APP_VERSION }, 30000);
     if(!data.ok) throw new Error(data.error || 'Error desconocido del servidor');
     if(tipo==='LugarMaquina'){
       catalogosCache.LugarMaquina[clienteLugar] = (catalogosCache.LugarMaquina[clienteLugar]||[]).filter(v=>v!==nombre);
@@ -1067,8 +1153,7 @@ async function diagnosticarCatalogos(){
     }
     if(!data.catalogos){
       log('\n⚠️ El servidor respondió ok:true pero SIN el campo "catalogos".');
-      log('   Esto pasa si la URL /exec todavía está corriendo una versión VIEJA del script,');
-      log('   de antes de que existiera el manejo de ?accion=catalogos en doGet.');
+      log('   Esto pasa si la URL /exec todavía está corriendo una versión VIEJA del script.');
       log('   Solución: en Apps Script → Implementar → Gestionar implementaciones →');
       log('   ✏️ (editar) → Nueva versión → Implementar.');
       return;
@@ -1098,18 +1183,19 @@ async function diagnosticarCatalogos(){
 
 // ══════════════════════════════════════════════════════════════════════
 // Historial completo (administrador): ver TODOS los reportes de la base
-// de datos (no solo los de este dispositivo) y editar cualquiera de ellos.
+// de datos y editar cualquiera. Las consultas van por POST con la clave
+// de administrador (el servidor ya no las entrega sin autorización).
 // ══════════════════════════════════════════════════════════════════════
 let historialCache = [];
 let reporteEditandoId = null; // null = modo "reporte nuevo"; con valor = editando ese ID
 
 async function abrirModalHistorial(){
+  if(!adminToken){ alert('Primero entra como administrador (candado 🔒).'); return; }
   document.getElementById('modal-historial').style.display = 'flex';
   document.getElementById('historial-estado').textContent = 'Cargando...';
   document.getElementById('historial-lista').innerHTML = '';
   try{
-    const res = await fetch(APPS_SCRIPT_URL + '?accion=historial');
-    const data = await res.json();
+    const data = await postJSON({ accion:'historial', token:adminToken, v:APP_VERSION }, 60000);
     if(!data.ok) throw new Error(data.error||'Error desconocido');
     historialCache = data.reportes || [];
     document.getElementById('historial-estado').textContent = `${historialCache.length} reporte(s) en total.`;
@@ -1136,14 +1222,18 @@ function renderHistorialLista(){
     <div style="background:var(--accent);border:1.5px solid var(--border);border-radius:7px;padding:10px 14px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
         <div>
-          <div style="font-weight:700;color:var(--primary);font-size:14px;">${r['Número de OT']||'(sin OT)'} — ${r['Item']||''}</div>
-          <div style="font-size:12.5px;color:var(--text);margin-top:2px;">${r['Descripción del Producto']||''}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;">🏷️ ${r['Cliente']||'(sin cliente)'} · ${r['Marca temporal']||''}</div>
+          <div style="font-weight:700;color:var(--primary);font-size:14px;">${esc(r['Número de OT']||'(sin OT)')} — ${esc(r['Item']||'')}</div>
+          <div style="font-size:12.5px;color:var(--text);margin-top:2px;">${esc(r['Descripción del Producto']||'')}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;">🏷️ ${esc(r['Cliente']||'(sin cliente)')} · ${esc(r['Marca temporal']||'')}</div>
         </div>
-        <button type="button" class="btn" style="background:var(--primary);color:#fff;white-space:nowrap;flex-shrink:0;" onclick="editarReporteDesdeHistorial('${r['ID']}')">✏️ Editar</button>
+        <button type="button" class="btn btn-editar-hist" data-id="${esc(r['ID'])}" style="background:var(--primary);color:#fff;white-space:nowrap;flex-shrink:0;">✏️ Editar</button>
       </div>
     </div>`).join('');
 }
+document.getElementById('historial-lista').addEventListener('click', function(e){
+  const b = e.target.closest('.btn-editar-hist');
+  if(b) editarReporteDesdeHistorial(b.dataset.id);
+});
 document.getElementById('modal-historial').addEventListener('click', function(e){
   if(e.target === this) cerrarModalHistorial();
 });
@@ -1151,8 +1241,7 @@ document.getElementById('modal-historial').addEventListener('click', function(e)
 async function editarReporteDesdeHistorial(id){
   document.getElementById('historial-estado').textContent = 'Cargando el reporte...';
   try{
-    const res = await fetch(APPS_SCRIPT_URL + '?accion=reporte_detalle&id=' + encodeURIComponent(id));
-    const data = await res.json();
+    const data = await postJSON({ accion:'reporte_detalle', id, token:adminToken, v:APP_VERSION }, 60000);
     if(!data.ok || !data.reporte) throw new Error(data.error||'No se encontró el reporte.');
     poblarFormularioConReporte(data.reporte, data.hallazgos||[]);
     cerrarModalHistorial();
@@ -1217,11 +1306,14 @@ function entrarModoEdicion(){
   document.getElementById('btn-cancelar-edicion').style.display = 'inline-flex';
   document.getElementById('edicion-aviso').style.display = 'block';
 }
-function cancelarEdicionReporte(){
+function salirModoEdicion(){
   reporteEditandoId = null;
   document.getElementById('btn-guardar').textContent = '💾 Guardar reporte';
   document.getElementById('btn-cancelar-edicion').style.display = 'none';
   document.getElementById('edicion-aviso').style.display = 'none';
+}
+function cancelarEdicionReporte(){
+  salirModoEdicion();
   document.getElementById('flexigrip-form').reset();
   imageFiles=[]; renderPreviews();
   defectosList=[]; renderDefectosList();
@@ -1252,9 +1344,9 @@ function renderPersonalChecklist(marcados){
     <div id="personal-checks" style="display:flex;flex-direction:column;gap:8px;">
       ${nombres.length ? nombres.map(n=>`
         <label style="font-weight:400;font-size:14px;display:flex;align-items:center;gap:9px;cursor:pointer;padding:8px 12px;border:1.5px solid var(--border);border-radius:7px;">
-          <input type="checkbox" class="chk-persona-equipo" value="${n.replace(/"/g,'&quot;')}" ${marcadosSet.has(n)?'checked':''} style="width:18px;height:18px;accent-color:var(--primary);flex-shrink:0;" />
-          <span style="flex:1;">${n}</span>
-          <button type="button" class="btn-quitar-roster" data-nombre="${n.replace(/"/g,'&quot;')}" style="background:none;border:none;color:var(--error);font-size:11px;font-weight:600;cursor:pointer;">✕ quitar</button>
+          <input type="checkbox" class="chk-persona-equipo" value="${esc(n)}" ${marcadosSet.has(n)?'checked':''} style="width:18px;height:18px;accent-color:var(--primary);flex-shrink:0;" />
+          <span style="flex:1;">${esc(n)}</span>
+          <button type="button" class="btn-quitar-roster" data-nombre="${esc(n)}" style="background:none;border:none;color:var(--error);font-size:11px;font-weight:600;cursor:pointer;">✕ quitar</button>
         </label>`).join('') : '<p class="hint" style="margin:0;">Aún no hay nadie registrado. Agrega el primer nombre abajo.</p>'}
     </div>
     <div style="display:flex;gap:8px;margin-top:10px;">
@@ -1367,8 +1459,8 @@ async function redimensionarAJpeg(src, maxLado, calidad){
   const img = await cargarImagen(src);
   let w = img.naturalWidth, h = img.naturalHeight;
   if(!w || !h) throw new Error('Imagen vacía');
-  const esc = Math.min(1, maxLado/Math.max(w,h));
-  w = Math.round(w*esc); h = Math.round(h*esc);
+  const esc2 = Math.min(1, maxLado/Math.max(w,h));
+  w = Math.round(w*esc2); h = Math.round(h*esc2);
   const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
   const cx = cv.getContext('2d');
   cx.fillStyle = '#fff'; cx.fillRect(0,0,w,h);
@@ -1415,8 +1507,8 @@ function renderPreviews(){
   imageFiles.forEach((item,idx)=>{
     const div=document.createElement('div');
     div.className='preview-item';
-    div.innerHTML=`<img src="${item.thumb || item.dataUrl}" alt="${item.name}"/>
-      <span class="img-name">${item.name}</span>
+    div.innerHTML=`<img src="${esc(item.thumb || item.dataUrl)}" alt="${esc(item.name)}"/>
+      <span class="img-name">${esc(item.name)}</span>
       <button type="button" class="remove-img" data-idx="${idx}">✕</button>`;
     grid.appendChild(div);
   });
@@ -1474,10 +1566,7 @@ document.addEventListener('input', function(e){
 });
 
 // Última validación (respaldo final antes de guardar): confirma que TODOS los
-// campos de cantidad sean números enteros válidos (sin decimales, sin signos,
-// sin texto). Aunque ya es casi imposible escribir algo distinto, esto atrapa
-// cualquier caso raro que se haya colado por otra vía (autofill, extensiones
-// del navegador, etc.) antes de que el reporte se guarde o se envíe.
+// campos de cantidad sean números enteros válidos.
 function validarCantidadesEnteras(form){
   let ok = true;
   form.querySelectorAll('.num-only').forEach(el=>{
@@ -1519,10 +1608,7 @@ function otEsValido(valor){
 
 // ── Lugar / Máquina específico: combobox cuyas opciones dependen del
 // Cliente elegido (cada cliente tiene su propia lista). Agregar/quitar
-// es solo tarea del administrador, desde "Gestionar catálogos" — igual
-// que Cliente y Defectos. Se recuerda la última selección por cliente,
-// mientras la página siga abierta, para no repetirla en cada lote si
-// varios se revisan seguidos en el mismo lugar.
+// es solo tarea del administrador, desde "Gestionar catálogos".
 let ultimoLugarMaquinaPorCliente = {};
 
 function getLugaresMaquinasConocidos(cliente){
@@ -1539,7 +1625,7 @@ function renderLugarMaquinaSelect(seleccionar){
   }
   const nombres = getLugaresMaquinasConocidos(cliente).slice().sort();
   sel.innerHTML = nombres.length
-    ? '<option value="">-- Selecciona el lugar / máquina --</option>' + nombres.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`).join('')
+    ? '<option value="">-- Selecciona el lugar / máquina --</option>' + nombres.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')
     : '<option value="">-- Sin lugares registrados para este cliente --</option>';
   const valorAUsar = seleccionar || ultimoLugarMaquinaPorCliente[cliente];
   if(valorAUsar && nombres.includes(valorAUsar)) sel.value = valorAUsar;
@@ -1561,16 +1647,13 @@ function actualizarCajaDetalleLugar(){
 }
 actualizarCajaDetalleLugar();
 
-// ── Validación cruzada: Revisadas · Hallazgos · Actividad · Liberadas/Rechazadas ──
-// Reglas:
-//  1) (ERROR, bloquea) Hallazgos (suma de defectos) no puede superar lo revisado.
-//  2) (ERROR, bloquea) Liberadas + rechazadas no puede superar lo revisado.
-//  3) (AVISO, no bloquea) Si la actividad es solo "Inspeccionadas" (no hubo
-//     Segregación ni Reacondicionamiento) no debería haber rechazadas.
-//  4) (AVISO, no bloquea) Si hubo Segregación o Reacondicionamiento en algún
-//     hallazgo, lo rechazado no debería superar lo hallado con defecto.
-//  5) (INFO) Si sobran bolsas sin liberar ni rechazar, se informa que quedan
-//     pendientes (esto es normal, p. ej. inspección parcial).
+// ── Validación cruzada: Revisadas · Liberadas · Rechazadas · Hallazgos ────
+// Reglas (decisión de negocio 28/09/2026):
+//  1) (ERROR, bloquea) Liberadas + rechazadas debe ser IGUAL a lo revisado.
+//  2) (AVISO) Si ningún hallazgo tiene segregada/reacondicionada, no debería
+//     haber rechazadas.
+//  3) Los defectos se CUENTAN por ocurrencia: una bolsa puede tener varios,
+//     así que su suma puede superar las bolsas revisadas (no es error).
 function calcularActividad(){
   const sumaSeg = defectosList.reduce((s,d)=>s+(Number(d.segregada)||0),0);
   const sumaRea = defectosList.reduce((s,d)=>s+(Number(d.reacondicionada)||0),0);
@@ -1592,27 +1675,22 @@ function evaluarValidaciones(){
   if(total===0 && lib===0 && rech===0 && sumaDefectos===0){ box.style.display='none'; return true; }
 
   const mensajes = []; // { tipo:'error'|'aviso'|'info'|'ok', texto }
-
-  if(sumaDefectos > total){
-    mensajes.push({tipo:'error', texto:`Los hallazgos (${sumaDefectos.toLocaleString('es-MX')} bolsas con defecto) superan lo revisado (${total.toLocaleString('es-MX')}). No puede haber más bolsas defectuosas que revisadas.`});
-  }
+  const fmtN = n => n.toLocaleString('es-MX');
   const sumaLibRech = lib + rech;
-  if(sumaLibRech > total){
-    mensajes.push({tipo:'error', texto:`Liberadas + rechazadas (${sumaLibRech.toLocaleString('es-MX')}) supera lo revisado (${total.toLocaleString('es-MX')}).`});
+
+  if(sumaLibRech !== total){
+    const dif = total - sumaLibRech;
+    mensajes.push({tipo:'error', texto: dif>0
+      ? `Liberadas + rechazadas (${fmtN(sumaLibRech)}) es menor que lo revisado (${fmtN(total)}): faltan ${fmtN(dif)} bolsa(s) por clasificar como liberadas o rechazadas.`
+      : `Liberadas + rechazadas (${fmtN(sumaLibRech)}) supera lo revisado (${fmtN(total)}) por ${fmtN(-dif)} bolsa(s).`});
   }
   if(!huboSegOReac && rech > 0){
-    mensajes.push({tipo:'aviso', texto:`Registraste ${rech.toLocaleString('es-MX')} bolsa(s) rechazada(s), pero ningún hallazgo tiene segregada o reacondicionada. El rechazo normalmente viene de ahí — revisa tus hallazgos.`});
-  }
-  if(huboSegOReac && sumaDefectos>0 && rech > sumaDefectos){
-    mensajes.push({tipo:'aviso', texto:`Estás rechazando ${rech.toLocaleString('es-MX')} bolsas, más de las ${sumaDefectos.toLocaleString('es-MX')} reportadas como defectuosas en Hallazgos. Verifica que los hallazgos reflejen todo lo rechazado.`});
-  }
-  if(sumaLibRech < total && mensajes.every(m=>m.tipo!=='error')){
-    mensajes.push({tipo:'info', texto:`Quedan ${(total-sumaLibRech).toLocaleString('es-MX')} bolsas sin liberar ni rechazar (pendientes de inspección o reacondicionamiento). Si ya terminaste, revisa tus cantidades.`});
+    mensajes.push({tipo:'aviso', texto:`Registraste ${fmtN(rech)} bolsa(s) rechazada(s), pero ningún hallazgo tiene segregada o reacondicionada. El rechazo normalmente viene de ahí — revisa tus hallazgos.`});
   }
 
   const hayError = mensajes.some(m=>m.tipo==='error');
-  if(!mensajes.length){
-    mensajes.push({tipo:'ok', texto:`Los números cuadran: ${total.toLocaleString('es-MX')} revisadas = ${lib.toLocaleString('es-MX')} liberadas + ${rech.toLocaleString('es-MX')} rechazadas.`});
+  if(!hayError){
+    mensajes.push({tipo:'ok', texto:`Los números cuadran: ${fmtN(total)} revisadas = ${fmtN(lib)} liberadas + ${fmtN(rech)} rechazadas. Defectos registrados: ${fmtN(sumaDefectos)}.`});
   }
 
   const estilos = {
@@ -1625,7 +1703,7 @@ function evaluarValidaciones(){
   box.style.background='transparent'; box.style.border='none'; box.style.padding='0';
   box.innerHTML = mensajes.map(m=>{
     const s = estilos[m.tipo];
-    return `<div style="background:${s.bg};color:${s.color};border:1.5px solid ${s.border};border-radius:7px;padding:10px 14px;margin-bottom:8px;">${s.icono} ${m.texto}</div>`;
+    return `<div style="background:${s.bg};color:${s.color};border:1.5px solid ${s.border};border-radius:7px;padding:10px 14px;margin-bottom:8px;">${s.icono} ${esc(m.texto)}</div>`;
   }).join('');
 
   return !hayError;
@@ -1634,9 +1712,19 @@ function evaluarValidaciones(){
   document.getElementById(id).addEventListener('input', evaluarValidaciones);
 });
 
+// Mensaje bajo el botón Guardar. tipo: 'ok' | 'aviso' | 'error'
+function mostrarMensajeGuardado(texto, tipo, ms){
+  const msg = document.getElementById('success-msg');
+  msg.className = tipo==='error' ? 'msg-error' : (tipo==='aviso' ? 'msg-aviso' : '');
+  msg.textContent = texto;
+  msg.style.display = 'block';
+  clearTimeout(mostrarMensajeGuardado._t);
+  mostrarMensajeGuardado._t = setTimeout(()=> msg.style.display='none', ms || 6000);
+  msg.scrollIntoView({behavior:'smooth'});
+}
 
 // Submit
-document.getElementById('flexigrip-form').addEventListener('submit',function(e){
+document.getElementById('flexigrip-form').addEventListener('submit', async function(e){
   e.preventDefault();
   const form=this; let valid=true;
   form.querySelectorAll('.field-error').forEach(el=>el.remove());
@@ -1646,6 +1734,10 @@ document.getElementById('flexigrip-form').addEventListener('submit',function(e){
   if(!validarCantidadesEnteras(form)){ valid=false; }
   if(otInput.value.trim() && !otEsValido(otInput.value.trim())){
     markError(otInput, 'El número de OT debe ser "OT" seguido de 8 números (ej. OT26050145).');
+    valid=false;
+  }
+  if(form.cantidad_total.value.trim() !== '' && Number(form.cantidad_total.value) <= 0){
+    markError(form.cantidad_total, 'Las bolsas revisadas deben ser mayores a 0.');
     valid=false;
   }
   if(!defectosList.length){
@@ -1670,9 +1762,16 @@ document.getElementById('flexigrip-form').addEventListener('submit',function(e){
     return;
   }
 
+  const eraEdicion = !!reporteEditandoId;
+  if(eraEdicion && !adminToken){
+    mostrarMensajeGuardado('⛔ La sesión de administrador caducó. Vuelve a entrar con el candado 🔒 para actualizar el reporte.', 'error');
+    return;
+  }
+
   const now=new Date();
-  const rid = 'R' + now.getTime();
-  const totalDefecto = defectosList.reduce((s,d)=>s+d.hallada,0);
+  // ID único generado en el dispositivo: si el envío se repite, el servidor no duplica el reporte
+  const rid = 'R' + now.getTime().toString(36) + Math.random().toString(36).slice(2,10);
+  const totalDefecto = defectosList.reduce((s,d)=>s+d.hallada,0); // = defectos detectados (ocurrencias)
   const personasMarcadas = Array.from(document.querySelectorAll('.chk-persona-equipo:checked')).map(chk=>chk.value);
   const resumenDefectos = defectosList.map(d=>`${d.nombre} (hallada:${d.hallada}, segregada:${d.segregada}, reacondicionada:${d.reacondicionada})`).join(', ');
   const clienteVal = form.cliente.value.trim();
@@ -1689,7 +1788,7 @@ document.getElementById('flexigrip-form').addEventListener('submit',function(e){
       return detalleVal ? `En planta del cliente - ${detalleVal}` : 'En planta del cliente';
     })(),
     'Defecto Detectado': resumenDefectos,
-    'Bolsas con Defecto': totalDefecto,
+    'Bolsas con Defecto': totalDefecto, // nombre interno heredado; significa "defectos detectados"
     'Bolsas Liberadas': Number(form.liberadas.value),
     'Bolsas Rechazadas': Number(form.rechazadas.value),
     Personal: personasMarcadas.join(', ') || 'No especificado',
@@ -1706,19 +1805,18 @@ document.getElementById('flexigrip-form').addEventListener('submit',function(e){
   if(fotosCompletas.length){
     idbSet('fotos', rid, fotosCompletas).catch(err=> console.warn('No se pudieron guardar las fotos localmente:', err));
   }
-  guardarUltimoReporte(reporte);
-  if(!reporteEditandoId){
+  if(!eraEdicion){
+    guardarUltimoReporte(reporte);
     const reportes=getReportes();
     reportes.push(reporte);
     saveReportes(reportes);
+    updateUI();
   }
-  updateUI();
 
-  // Payload en el formato que espera el backend. Incluye "hallazgos" con el
-  // desglose completo (hallada/segregada/reacondicionada) por cada defecto,
-  // para que el Apps Script escriba una fila por hallazgo en la pestaña
-  // "Hallazgos" y así se pueda hacer Pareto real por defecto + resultado.
+  // Payload en el formato que espera el backend (Code.gs v2).
   const payload = {
+    v: APP_VERSION,
+    id_cliente: rid,
     cliente: reporte['Cliente'],
     ot: reporte['N° OT'],
     item: reporte['Ítem'],
@@ -1739,50 +1837,68 @@ document.getElementById('flexigrip-form').addEventListener('submit',function(e){
       reacondicionada: d.reacondicionada
     }))
   };
-  if(reporteEditandoId){
+  if(eraEdicion){
     payload.accion = 'actualizar_reporte';
     payload.id = reporteEditandoId;
+    payload.token = adminToken;
   }
 
   const loadingEl = document.getElementById('loading-msg');
-  loadingEl.textContent = reporteEditandoId ? '⏳ Actualizando reporte...' : '⏳ Enviando reporte a la base de datos...';
+  loadingEl.textContent = eraEdicion ? '⏳ Actualizando reporte...' : '⏳ Enviando reporte a la base de datos...';
   loadingEl.style.display = 'block';
-  const eraEdicion = !!reporteEditandoId;
 
+  const limpiarFormulario = ()=>{
+    salirModoEdicion();
+    form.reset(); imageFiles=[]; renderPreviews();
+    defectosList=[]; renderDefectosList();
+    renderPersonalChecklist([]);
+    document.getElementById('balance-cantidades').style.display='none';
+    renderClientesSelect();
+    actualizarCajaDetalleLugar();
+  };
+
+  if(eraEdicion){
+    // Las ediciones esperan la respuesta del servidor y NO se encolan:
+    // si falla, el formulario se conserva para poder reintentar.
+    const res = await enviarABaseDeDatos(payload, { sinCola:true });
+    loadingEl.style.display='none';
+    if(res.ok){
+      guardarUltimoReporte(reporte);
+      updateUI();
+      limpiarFormulario();
+      mostrarMensajeGuardado('✅ Reporte actualizado en la base de datos.', 'ok');
+    } else if(res.motivo==='rechazado'){
+      mostrarMensajeGuardado('⛔ El servidor no aceptó la actualización: ' + res.error, 'error', 12000);
+    } else {
+      mostrarMensajeGuardado('⚠️ No se pudo actualizar (sin conexión o el servidor no respondió). Tus cambios siguen en pantalla: intenta de nuevo.', 'aviso', 10000);
+    }
+    return;
+  }
+
+  // Reporte nuevo: el formulario se limpia de inmediato y el envío sigue en segundo plano
   enviarABaseDeDatos(payload).then(res=>{
     loadingEl.style.display='none';
-    const msg=document.getElementById('success-msg');
     if(res.ok){
-      msg.textContent = eraEdicion ? '✅ Reporte actualizado en la base de datos.' : '✅ Reporte guardado y enviado a la base de datos.';
+      mostrarMensajeGuardado(res.duplicado ? '✅ Reporte ya estaba en la base de datos (no se duplicó).' : '✅ Reporte guardado y enviado a la base de datos.', 'ok');
+    } else if(res.motivo==='rechazado'){
+      mostrarMensajeGuardado('⛔ El servidor NO guardó el reporte: ' + res.error + ' Revisa el aviso rojo de arriba.', 'error', 15000);
     } else if(res.motivo==='sin_conexion'){
-      msg.textContent = eraEdicion ? '⚠️ Sin conexión: la actualización se enviará cuando haya señal.' : '✅ Reporte guardado. Sin conexión: se enviará automáticamente cuando haya señal.';
+      mostrarMensajeGuardado('✅ Reporte guardado en este dispositivo. Sin conexión: se enviará automáticamente cuando haya señal.', 'aviso');
     } else {
-      msg.textContent = eraEdicion ? '⚠️ Falta configurar la conexión a la base de datos, no se pudo actualizar.' : '✅ Reporte guardado localmente. Falta configurar la conexión a la base de datos.';
+      mostrarMensajeGuardado('✅ Reporte guardado localmente. Falta configurar la conexión a la base de datos.', 'aviso');
     }
-    msg.style.display='block';
-    setTimeout(()=>msg.style.display='none',5000);
-    msg.scrollIntoView({behavior:'smooth'});
+    actualizarEstadoCola();
   }).catch(err=>{
     // Nunca dejar el mensaje "Enviando..." pegado en pantalla
     loadingEl.style.display='none';
     console.warn('Error inesperado al enviar:', err);
   });
 
-  reporteEditandoId = null;
-  document.getElementById('btn-guardar').textContent = '💾 Guardar reporte';
-  document.getElementById('btn-cancelar-edicion').style.display = 'none';
-  document.getElementById('edicion-aviso').style.display = 'none';
-  form.reset(); imageFiles=[]; renderPreviews();
-  defectosList=[]; renderDefectosList();
-  renderPersonalChecklist([]);
-  document.getElementById('balance-cantidades').style.display='none';
-  renderClientesSelect();
-  actualizarCajaDetalleLugar();
+  limpiarFormulario();
 });
 
 // ── Descargar base de datos completa (Google Sheets) ──────────────────────
-// Abre/descarga directo la Google Sheet completa: todos los reportes de
-// todos los técnicos, siempre al día.
+// Abre/descarga directo la Google Sheet completa (solo administrador).
 const SHEET_DESCARGA_URL = 'https://docs.google.com/spreadsheets/d/11w5Nzppk0IGgYd-Or2vpuNzKg82eFx-IUcdN1Bf9RD0/export?format=xlsx';
 document.getElementById('btn-excel').addEventListener('click', function(){
   window.open(SHEET_DESCARGA_URL, '_blank');
@@ -1791,23 +1907,19 @@ document.getElementById('btn-excel').addEventListener('click', function(){
 
 // ══════════════════════════════════════════════════════════════════════
 // WHATSAPP
-// Antes: se abría WhatsApp con un <iframe> oculto + window.open() dentro de
-// un setTimeout, y las fotos se "descargaban" con <a download>. En iPhone
-// (Safari) las tres cosas se bloquean: iOS no deja abrir apps desde un
-// iframe, bloquea ventanas abiertas fuera del toque del usuario, y las
-// descargas van a la app "Archivos", no a la galería.
-// Ahora: un panel con botones que el técnico toca directamente:
+// Un panel con botones que el técnico toca directamente (iPhone bloquea las
+// aperturas automáticas de apps y de ventanas):
 //   1) Mensaje → enlace directo a WhatsApp (whatsapp:// en celular).
-//   2) Fotos   → hoja de "Compartir" del sistema (Web Share API), donde se
-//                elige WhatsApp; las fotos se preparan ANTES del toque,
-//                porque iOS exige que share() se llame en el mismo toque.
+//   2) Fotos   → hoja de "Compartir" del sistema (Web Share API); las fotos
+//                se preparan ANTES del toque, porque iOS exige que share()
+//                se llame en el mismo toque.
 //   3) Copiar  → respaldo por si algo falla.
 // ══════════════════════════════════════════════════════════════════════
 function construirMensajeWhatsApp(r){
   const recibidas = Number(r['Bolsas Recibidas'])||0;
   const rechazadas = Number(r['Bolsas Rechazadas'])||0;
   const liberadas = Number(r['Bolsas Liberadas'])||0;
-  const conDefecto = Number(r['Bolsas con Defecto'])||0;
+  const totalDefectos = Number(r['Bolsas con Defecto'])||0; // = defectos detectados
   const pctRechazo = recibidas>0 ? ((rechazadas/recibidas)*100).toFixed(1) : '0.0';
   const pctLibera  = recibidas>0 ? ((liberadas/recibidas)*100).toFixed(1)  : '0.0';
   const defectos = r._defectos || [];
@@ -1838,7 +1950,7 @@ function construirMensajeWhatsApp(r){
     `📥 *Revisadas:* ${recibidas.toLocaleString('es-MX')}\n` +
     `✅ *Liberadas:* ${liberadas.toLocaleString('es-MX')} (${pctLibera}%)\n` +
     `${rechazadas>0?'❌':'✅'} *Rechazadas:* ${rechazadas.toLocaleString('es-MX')} (${pctRechazo}%)\n` +
-    `${conDefecto>0?'⚠️':'✅'} *Con defecto:* ${conDefecto.toLocaleString('es-MX')}\n\n` +
+    `${totalDefectos>0?'⚠️':'✅'} *Defectos detectados:* ${totalDefectos.toLocaleString('es-MX')}\n\n` +
     `🔍 *HALLAZGOS*\n` +
     `${hallazgoTexto}\n\n` +
     `🔧 *EQUIPO*\n` +
@@ -1955,8 +2067,8 @@ function mostrarGaleriaRespaldo(){
   const hint = document.getElementById('wa-fotos-hint');
   galeria.innerHTML = waFotosSrc.map((src,i)=>
     ES_MOVIL
-      ? `<img src="${src}" alt="Evidencia ${i+1}">`
-      : `<a href="${src}" download="${nombreSeguro(waArchivos[i] ? waArchivos[i].name : 'evidencia_'+(i+1)+'.jpg')}"><img src="${src}" alt="Evidencia ${i+1}"></a>`
+      ? `<img src="${esc(src)}" alt="Evidencia ${i+1}">`
+      : `<a href="${esc(src)}" download="${esc(nombreSeguro(waArchivos[i] ? waArchivos[i].name : 'evidencia_'+(i+1)+'.jpg'))}"><img src="${esc(src)}" alt="Evidencia ${i+1}"></a>`
   ).join('');
   galeria.style.display = 'grid';
   hint.textContent = ES_IOS
@@ -2013,7 +2125,7 @@ document.getElementById('wa-btn-copiar').addEventListener('click', function(){
   } else respaldo();
 });
 
-// ── CONSULTA DE REPORTES ─────────────────────────────────────────────────────
+// ── CONSULTA DE REPORTES (historial de ESTE dispositivo) ─────────────────────
 
 function renderReportesLista(){
   const todos = getReportes();
@@ -2054,41 +2166,41 @@ function renderReportesLista(){
     <div class="reporte-item" id="ritem-${idx}" onclick="toggleExpand(${idx})">
       <div class="reporte-item-header">
         <div class="reporte-item-main">
-          <div class="reporte-item-ot">${r['N° OT']} — Ítem ${r['Ítem']}</div>
-          <div class="reporte-item-desc">${r['Descripción Producto']}</div>
-          ${r['Cliente'] ? `<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;">🏷️ ${r['Cliente']}</div>` : ''}
+          <div class="reporte-item-ot">${esc(r['N° OT'])} — Ítem ${esc(r['Ítem'])}</div>
+          <div class="reporte-item-desc">${esc(r['Descripción Producto'])}</div>
+          ${r['Cliente'] ? `<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;">🏷️ ${esc(r['Cliente'])}</div>` : ''}
         </div>
         <div class="reporte-item-aside">
-          <div class="reporte-item-fecha">${r['Fecha']}</div>
+          <div class="reporte-item-fecha">${esc(r['Fecha'])}</div>
           <span class="toggle-icon">▼</span>
         </div>
       </div>
       <div class="reporte-item-tags">
-        <span class="tag gray">👷 ${r['Personal']}</span>
-        <span class="tag gray">${r['Área Inspección']}</span>
-        <span class="tag ${tieneDefecto?'red':'green'}">${tieneDefecto ? '⚠️ '+rechazadas+' rechazadas ('+pct+')' : '✅ Sin rechazos'}</span>
-        <span class="tag green">${liberadas} liberadas</span>
-        ${numFotos ? `<span class="tag gray">📷 ${numFotos} foto${numFotos!==1?'s':''}</span>` : ''}
+        <span class="tag gray">👷 ${esc(r['Personal'])}</span>
+        <span class="tag gray">${esc(r['Área Inspección'])}</span>
+        <span class="tag ${tieneDefecto?'red':'green'}">${tieneDefecto ? '⚠️ '+esc(rechazadas)+' rechazadas ('+esc(pct)+')' : '✅ Sin rechazos'}</span>
+        <span class="tag green">${esc(liberadas)} liberadas</span>
+        ${numFotos ? `<span class="tag gray">📷 ${esc(numFotos)} foto${numFotos!==1?'s':''}</span>` : ''}
       </div>
     </div>
     <div class="reporte-expand" id="rexpand-${idx}">
       <div class="expand-grid">
-        <div class="expand-field"><div class="expand-label">Bolsas recibidas</div><div class="expand-val">${recibidas.toLocaleString('es-MX')}</div></div>
-        <div class="expand-field"><div class="expand-label">Bolsas con defecto</div><div class="expand-val">${(Number(r['Bolsas con Defecto'])||0).toLocaleString('es-MX')}</div></div>
+        <div class="expand-field"><div class="expand-label">Bolsas revisadas</div><div class="expand-val">${recibidas.toLocaleString('es-MX')}</div></div>
+        <div class="expand-field"><div class="expand-label">Defectos detectados</div><div class="expand-val">${(Number(r['Bolsas con Defecto'])||0).toLocaleString('es-MX')}</div></div>
         <div class="expand-field"><div class="expand-label">Bolsas liberadas</div><div class="expand-val" style="color:#1D6A3A;font-weight:700;">${liberadas.toLocaleString('es-MX')}</div></div>
         <div class="expand-field"><div class="expand-label">Bolsas rechazadas</div><div class="expand-val" style="color:#C0392B;font-weight:700;">${rechazadas.toLocaleString('es-MX')}</div></div>
         <div class="expand-field" style="grid-column:1/-1;">
-          <div class="expand-label">Defectos detectados</div>
+          <div class="expand-label">Defectos detectados (por tipo)</div>
           <div class="expand-val">
             ${(r._defectos && r._defectos.length)
-              ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;">${r._defectos.map(d=>`<span class="tag ${d.nombre.toUpperCase()==='SIN DEFECTOS'?'green':'red'}">${d.nombre}: ${d.hallada}</span>`).join('')}</div>`
-              : (r['Defecto Detectado']||'—')}
+              ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;">${r._defectos.map(d=>`<span class="tag ${String(d.nombre).toUpperCase()==='SIN DEFECTOS'?'green':'red'}">${esc(d.nombre)}: ${esc(d.hallada)}</span>`).join('')}</div>`
+              : esc(r['Defecto Detectado']||'—')}
           </div>
         </div>
-        <div class="expand-field" style="grid-column:1/-1;"><div class="expand-label">Personal</div><div class="expand-val">${r['Personal'] && r['Personal']!=='No especificado' ? r['Personal'] : 'Sin personal registrado'}</div></div>
-        <div class="expand-field" style="grid-column:1/-1;"><div class="expand-label">Observaciones</div><div class="expand-val">${r['Observaciones']||'Sin observaciones'}</div></div>
+        <div class="expand-field" style="grid-column:1/-1;"><div class="expand-label">Personal</div><div class="expand-val">${r['Personal'] && r['Personal']!=='No especificado' ? esc(r['Personal']) : 'Sin personal registrado'}</div></div>
+        <div class="expand-field" style="grid-column:1/-1;"><div class="expand-label">Observaciones</div><div class="expand-val">${esc(r['Observaciones']||'Sin observaciones')}</div></div>
       </div>
-      ${fotos.length ? `<div class="expand-fotos">${fotos.map(f=>`<img class="expand-foto" src="${f}" alt="Evidencia"/>`).join('')}</div>` : ''}
+      ${fotos.length ? `<div class="expand-fotos">${fotos.map(f=>`<img class="expand-foto" src="${esc(f)}" alt="Evidencia"/>`).join('')}</div>` : ''}
       <button class="btn-del-reporte" onclick="event.stopPropagation();borrarReporte(${idx})">🗑️ Eliminar este reporte</button>
     </div>`;
   }).join('');
@@ -2103,7 +2215,7 @@ function toggleExpand(idx){
 }
 
 function borrarReporte(idx){
-  if(!confirm('¿Eliminar este reporte? Esta acción no se puede deshacer.')) return;
+  if(!confirm('¿Eliminar este reporte de ESTE dispositivo? No borra nada de la base de datos. Esta acción no se puede deshacer.')) return;
   const lista = getReportes();
   const [quitado] = lista.splice(idx,1);
   saveReportes(lista);
@@ -2258,7 +2370,8 @@ function renderGraficas(){
     }
   });
 
-  // % de cada tipo de defecto por OT (no el % general de rechazo)
+  // Tasa de cada tipo de defecto por OT: defectos ÷ bolsas revisadas × 100
+  // (puede superar 100 % porque una bolsa puede tener varios defectos)
   const nombresDefecto = [...new Set(otLabels.flatMap(o=>Object.keys(byOT[o].defectos)))];
   const datasetsDefecto = nombresDefecto.map((nombre,i)=>({
     label: nombre,
@@ -2303,7 +2416,7 @@ function renderGraficas(){
       }
     });
   }
-  document.getElementById('legend-defecto').innerHTML=nombresDefecto.map((nombre,i)=>`<span class="legend-item"><span class="legend-box" style="background:${COLORS_DEFECTO[i%COLORS_DEFECTO.length]};"></span>${nombre}</span>`).join('');
+  document.getElementById('legend-defecto').innerHTML=nombresDefecto.map((nombre,i)=>`<span class="legend-item"><span class="legend-box" style="background:${COLORS_DEFECTO[i%COLORS_DEFECTO.length]};"></span>${esc(nombre)}</span>`).join('');
 
   const defMap = {};
   reportes.forEach(r=>{
@@ -2345,7 +2458,7 @@ function renderGraficas(){
         }
       }}
     });
-    document.getElementById('legend-dona').innerHTML=defLabels.map((d,i)=>{const pct=defTotal>0?((defMap[d]/defTotal)*100).toFixed(1):'0';return `<span class="legend-item"><span class="legend-box" style="background:${COLORS_DEFECTO[i%COLORS_DEFECTO.length]};"></span>${d}: ${pct}%</span>`;}).join('');
+    document.getElementById('legend-dona').innerHTML=defLabels.map((d,i)=>{const pct=defTotal>0?((defMap[d]/defTotal)*100).toFixed(1):'0';return `<span class="legend-item"><span class="legend-box" style="background:${COLORS_DEFECTO[i%COLORS_DEFECTO.length]};"></span>${esc(d)}: ${pct}%</span>`;}).join('');
   }
 }
 
@@ -2391,7 +2504,7 @@ document.getElementById('btn-wa-graficas').addEventListener('click', function(){
     }));
     bloques.push({
       canvas: document.getElementById('chart-defecto'),
-      titulo: '% de defecto por OT',
+      titulo: 'Tasa de defectos por OT (por cada 100 bolsas revisadas)',
       leyenda: legItems
     });
   }
@@ -2434,7 +2547,6 @@ document.getElementById('btn-wa-graficas').addEventListener('click', function(){
   off.width = W; off.height = totalH;
   const c = off.getContext('2d');
 
-  // White bg
   c.fillStyle = '#F0F4F8';
   c.fillRect(0, 0, W, totalH);
 
@@ -2480,7 +2592,6 @@ document.getElementById('btn-wa-graficas').addEventListener('click', function(){
         const row = Math.floor(li / itemsPerRow);
         const lx = PAD + col * colW;
         const ly = y + row * LEG_ROW_H + 14*SCALE;
-        // colored square
         c.fillStyle = leg.color;
         c.fillRect(lx, ly - 11*SCALE, 12*SCALE, 12*SCALE);
         c.fillStyle = '#5A7185';
@@ -2520,6 +2631,9 @@ updateUI();
 migrarFotosAntiguas();
 
 // ── Clave de administrador ──
+// La clave YA NO está en este archivo: se manda al servidor (Code.gs) que la
+// compara con la propiedad ADMIN_TOKEN. Solo se guarda en memoria mientras
+// la página está abierta.
 function abrirClave(){
   const modal = document.getElementById('modal-clave');
   modal.style.display = 'flex';
@@ -2532,19 +2646,43 @@ function cerrarModal(){
   document.getElementById('modal-clave').style.display = 'none';
 }
 
-function verificarClave(){
-  const val = document.getElementById('input-clave').value;
-  if(val === 'flexigrip2026'){
-    adminDesbloqueado = true;
-    cerrarModal();
-    mostrarBotonesAdmin();
-    document.getElementById('btn-candado').textContent = '🔓';
-    document.getElementById('btn-candado').title = 'Modo administrador activo';
-    document.getElementById('btn-candado').onclick = null;
-    document.getElementById('btn-candado').style.background = 'rgba(255,255,255,0.28)';
-  } else {
-    document.getElementById('clave-error').style.display = 'block';
-    document.getElementById('input-clave').focus();
+async function verificarClave(){
+  const input = document.getElementById('input-clave');
+  const err = document.getElementById('clave-error');
+  const btn = document.getElementById('btn-entrar-clave');
+  const val = input.value;
+  if(!val){ input.focus(); return; }
+  btn.disabled = true; btn.textContent = 'Verificando...';
+  err.style.display = 'none';
+  try{
+    // Seguridad: comprobar primero que el servidor ya es la versión nueva.
+    // (Un servidor viejo tomaría "verificar_admin" como un reporte en blanco.)
+    const info = await (await fetch(APPS_SCRIPT_URL)).json();
+    if(!info || Number(info.version) < 2){
+      err.textContent = '⚠️ El servidor todavía no está actualizado (falta implementar la nueva versión de Code.gs).';
+      err.style.display = 'block';
+      return;
+    }
+    const data = await postJSON({ accion:'verificar_admin', token:val, v:APP_VERSION }, 20000);
+    if(data.ok && data.admin){
+      adminToken = val;
+      adminDesbloqueado = true;
+      cerrarModal();
+      mostrarBotonesAdmin();
+      document.getElementById('btn-candado').textContent = '🔓';
+      document.getElementById('btn-candado').title = 'Modo administrador activo';
+      document.getElementById('btn-candado').onclick = null;
+      document.getElementById('btn-candado').style.background = 'rgba(255,255,255,0.28)';
+    } else {
+      err.textContent = data.ok ? '❌ Clave incorrecta, intenta de nuevo.' : ('❌ ' + (data.error || 'No se pudo verificar.'));
+      err.style.display = 'block';
+      input.focus();
+    }
+  }catch(e){
+    err.textContent = '❌ No se pudo verificar la clave (¿sin conexión?). Intenta de nuevo.';
+    err.style.display = 'block';
+  }finally{
+    btn.disabled = false; btn.textContent = 'Entrar';
   }
 }
 
@@ -2566,8 +2704,7 @@ document.getElementById('modal-clave').addEventListener('click', function(e){
 // pone un botón que abre la lista con un buscador: se puede elegir de la
 // lista como siempre, o escribir para filtrar (sin importar acentos).
 // ══════════════════════════════════════════════════════════════════════
-function sinAcentos(t){ return String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
-function escHtml(t){ return String(t==null?'':t).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function sinAcentos(t){ return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
 const ES_CELULAR_COMBO = ()=> window.matchMedia('(max-width:520px)').matches;
 let comboAbierto = null;
 
